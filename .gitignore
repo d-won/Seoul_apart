@@ -1,0 +1,23 @@
+# 인증키/환경변수
+.env
+
+# 수집된 원본 데이터 (용량이 크고 재수집 가능)
+data/raw/
+data/processed/*.parquet
+data/processed/*.csv
+
+# 분석 산출물 (재생성 가능) — 예시 차트는 예외로 커밋 가능
+outputs/*.png
+outputs/*.csv
+!outputs/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+*.egg-info/
+
+# OS
+.DS_Store

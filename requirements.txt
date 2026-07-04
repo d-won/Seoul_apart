@@ -1,0 +1,11 @@
+# Seoul 재개발 인근 구축 아파트 가격 분석 파이프라인
+# Python 3.10+
+
+pandas>=2.0
+numpy>=1.24
+requests>=2.31
+PyYAML>=6.0
+python-dotenv>=1.0
+matplotlib>=3.7
+tenacity>=8.2      # API 재시도 백오프
+tqdm>=4.66         # 진행률 표시

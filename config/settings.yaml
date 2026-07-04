@@ -1,0 +1,24 @@
+# 분석 파라미터 — 자유롭게 조정하세요.
+
+# 구축 판정: 거래 시점 기준 준공 후 경과연수(년) 이상이면 '구축'으로 간주
+old_apartment_min_age: 15
+
+# 거리 구간(m) 경계 — 재개발 구역 중심으로부터.
+# [500, 1000, 2000] → 0-500m / 500-1000m / 1000-2000m / 2000m+
+distance_bands_m: [500, 1000, 2000]
+
+# 이벤트 스터디 윈도우(개월): 이벤트 전/후 관찰 기간
+event_window_before: 24
+event_window_after: 36
+
+# 이벤트 스터디 기준 이벤트 (redevelopment_areas.yaml 의 events 키)
+#   management_disposal(관리처분인가) | designation | construction | occupancy
+event_key: management_disposal
+
+# 이상치 제거: 평단가 상/하위 백분위 컷 (winsorize)
+winsor_lower_pct: 0.01
+winsor_upper_pct: 0.99
+
+# 전용면적 필터(㎡)
+min_area_m2: 20.0
+max_area_m2: 300.0
