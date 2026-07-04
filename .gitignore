@@ -10,6 +10,10 @@ data/processed/*.csv
 outputs/*.png
 outputs/*.csv
 !outputs/.gitkeep
+# report.html 을 폰용으로 렌더한 편의 파일(재생성 가능)은 제외
+outputs/report.pdf
+outputs/report.png
+
 # 실거래(2016.1–2026.6) 기반 산출물은 리포지토리에 포함
 !outputs/trend_overall.png
 !outputs/trend_overall.csv
