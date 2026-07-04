@@ -9,8 +9,13 @@
 - **측정**: ① 거리 구간별 상승률 비교 + ② 재개발 이벤트 전후 이벤트 스터디(DID) — 두 방법 결합
 - 자세한 설계는 **[docs/methodology.md](docs/methodology.md)** 참고
 
-> ⚠️ 이 저장소는 **분석 코드**입니다. 실거래가 원본은 포함하지 않습니다.
-> 아래처럼 본인의 국토부 API 인증키로 직접 수집해 실행하세요. (`data/raw/` 는 gitignore)
+> ⚠️ 이 저장소는 **분석 코드**입니다. 실거래가 원본(`data/raw/`)은 용량 문제로 포함하지 않습니다.
+> 아래처럼 직접 수집해 실행하세요. 수집 경로는 두 가지입니다:
+> - **`--source rt`** (권장·인증키 불필요): 국토부 실거래가 공개시스템(rt.molit.go.kr)의 자료제공 CSV.
+> - **`--source api`** (기본): 공공데이터포털 오픈API. 인증키 필요(`.env`).
+>
+> `outputs/` 의 차트·CSV·핸드폰 리포트(`report.html`)는 8개 구(재개발 10곳 소재)의
+> **2016.1–2026.6 실거래 254,612건**으로 채워 커밋돼 있습니다.
 
 ---
 
@@ -28,8 +33,8 @@ cp .env.example .env
 # 3) (선택) API 없이 파이프라인 자체 점검 — 합성 데이터로 로직 검증
 python run.py selftest
 
-# 4) 실거래 수집 + 분석 (예: 2015-01 ~ 2025-06)
-python run.py all --start 201501 --end 202506
+# 4) 실거래 수집 + 분석 (인증키 없이, rt.molit.go.kr 경로)
+python run.py all --start 201601 --end 202606 --source rt
 
 # 결과: outputs/ 폴더의 차트(.png)와 표(.csv), 콘솔의 상승률·DID 요약
 ```
@@ -37,10 +42,15 @@ python run.py all --start 201501 --end 202506
 수집과 분석을 나눠서 실행할 수도 있습니다:
 
 ```bash
-python run.py collect --start 201501 --end 202506         # 재개발 구역 소속 구 전체
-python run.py collect --start 201501 --end 202506 --lawd 11740 11680   # 특정 구만
+# 재개발 구역 소속 8개 구 전체(2016-01 ~ 2026-06), 인증키 불필요
+python run.py collect --start 201601 --end 202606 --source rt
+python run.py collect --start 201601 --end 202606 --source rt --lawd 11740 11680  # 특정 구만
+python run.py coords                                        # 거리 분석용 단지 좌표 수집
 python run.py analyze                                       # 이미 받은 데이터로 분석
 ```
+
+> 거리 구간·이벤트 스터디 분석은 아파트 좌표가 있어야 합니다. `python run.py coords` 가
+> rt.molit.go.kr 지도검색에서 대상 구의 단지 좌표를 모아 `config/apartment_coords.yaml` 에 저장합니다.
 
 ---
 
@@ -68,7 +78,9 @@ python run.py analyze                                       # 이미 받은 데�
 │   └── settings.yaml            # 분석 파라미터 (구축 기준·거리구간·이벤트 등)
 ├── src/
 │   ├── config.py                # 설정/인증키 로딩
-│   ├── fetch.py                 # 국토부 API 수집 (재시도·페이징)
+│   ├── fetch.py                 # 국토부 오픈API 수집 (재시도·페이징)
+│   ├── fetch_rt.py              # 국토부 실거래가공개시스템 CSV 수집 (인증키 불필요)
+│   ├── fetch_coords.py          # 단지 좌표 수집 (거리 분석용, rt.molit 지도검색)
 │   ├── geo.py                   # haversine 거리·거리구간 분류
 │   ├── analyze.py               # 정제·가격추이·거리비교·이벤트스터디·DID
 │   ├── visualize.py             # 차트 (matplotlib)

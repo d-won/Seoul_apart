@@ -25,7 +25,7 @@ import sys
 
 def cmd_collect(args):
     from src import pipeline
-    df = pipeline.collect(args.start, args.end, args.lawd)
+    df = pipeline.collect(args.start, args.end, args.lawd, source=args.source)
     print(f"수집 완료: {len(df):,} 건  → data/raw/ 저장")
 
 
@@ -40,12 +40,42 @@ def cmd_analyze(args):
 def cmd_all(args):
     from src import pipeline
     from src.config import Settings
-    df = pipeline.collect(args.start, args.end, args.lawd)
+    df = pipeline.collect(args.start, args.end, args.lawd, source=args.source)
     if df.empty:
         print("수집된 데이터가 없습니다.")
         return
     out = pipeline.run_analysis(df, Settings.load())
     _print_analysis(out)
+
+
+def cmd_coords(args):
+    """rt.molit.go.kr 지도검색에서 대상 구의 아파트 단지 좌표를 수집해 config에 저장."""
+    import yaml
+    from src import fetch_coords
+    from src.config import CONFIG_DIR, load_areas
+
+    codes = args.lawd or sorted({a.lawd_cd for a in load_areas()})
+    rows = fetch_coords.collect_coords(codes, progress=True)
+    seen, uniq = set(), []
+    for r in rows:
+        k = (r["lawd_cd"], r["apt_name"])
+        if k in seen:
+            continue
+        seen.add(k)
+        uniq.append({"lawd_cd": r["lawd_cd"], "apt_name": r["apt_name"],
+                     "lat": r["lat"], "lon": r["lon"]})
+    out = CONFIG_DIR / "apartment_coords.yaml"
+    header = (
+        "# 아파트별 좌표 사전 (거리 분석용) — 자동수집본\n"
+        "# rt.molit.go.kr 실거래가공개시스템 지도검색(ptDanjiList)에서 자동 수집.\n"
+        "# key = (lawd_cd, apt_name). apt_name 은 실거래 데이터의 단지명과 일치해야 매칭됩니다.\n"
+        "# 재생성:  python run.py coords --lawd 11740 11680 ...\n"
+    )
+    with open(out, "w", encoding="utf-8") as f:
+        f.write(header)
+        yaml.safe_dump({"apartments": uniq}, f, allow_unicode=True,
+                       sort_keys=False, default_flow_style=False)
+    print(f"단지 좌표 {len(uniq):,}개 저장 → {out}")
 
 
 def cmd_selftest(args):
@@ -76,6 +106,8 @@ def main(argv=None):
     pc.add_argument("--start", required=True, help="시작 YYYYMM")
     pc.add_argument("--end", required=True, help="종료 YYYYMM")
     pc.add_argument("--lawd", nargs="*", help="특정 자치구 코드(들). 생략 시 config 재개발 구역의 구 전체")
+    pc.add_argument("--source", choices=["api", "rt"], default="api",
+                    help="api=공공데이터포털 오픈API(인증키), rt=실거래가공개시스템 CSV(인증키 불필요)")
     pc.set_defaults(func=cmd_collect)
 
     pa = sub.add_parser("analyze", help="수집 데이터 분석 + 차트")
@@ -85,7 +117,13 @@ def main(argv=None):
     pall.add_argument("--start", required=True, help="시작 YYYYMM")
     pall.add_argument("--end", required=True, help="종료 YYYYMM")
     pall.add_argument("--lawd", nargs="*")
+    pall.add_argument("--source", choices=["api", "rt"], default="api",
+                      help="api=공공데이터포털 오픈API(인증키), rt=실거래가공개시스템 CSV(인증키 불필요)")
     pall.set_defaults(func=cmd_all)
+
+    pco = sub.add_parser("coords", help="아파트 단지 좌표 수집(거리 분석용, rt.molit.go.kr)")
+    pco.add_argument("--lawd", nargs="*", help="특정 자치구 코드(들). 생략 시 config 재개발 구역의 구 전체")
+    pco.set_defaults(func=cmd_coords)
 
     pt = sub.add_parser("selftest", help="합성 데이터로 파이프라인 점검(API 불필요)")
     pt.set_defaults(func=cmd_selftest)

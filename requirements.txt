@@ -7,5 +7,6 @@ requests>=2.31
 PyYAML>=6.0
 python-dotenv>=1.0
 matplotlib>=3.7
+pyarrow>=12.0      # parquet 저장/로드
 tenacity>=8.2      # API 재시도 백오프
 tqdm>=4.66         # 진행률 표시

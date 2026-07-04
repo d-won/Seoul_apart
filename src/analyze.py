@@ -152,8 +152,13 @@ def event_study(
     return out
 
 
-def diff_in_diff(event_df: pd.DataFrame) -> dict:
-    """이벤트 스터디 결과에서 간이 DID: (treated 사후상승 - control 사후상승)."""
+def diff_in_diff(event_df: pd.DataFrame, post_from: int = 13) -> dict:
+    """이벤트 스터디 결과에서 간이 DID: (treated 사후상승 - control 사후상승).
+
+    끝점 한 값만 쓰면 노이즈에 취약하므로, 사전(rel_month<=0) 평균 대비
+    사후 안정구간(rel_month>=post_from) 평균의 상승폭을 그룹별로 구해 그 차를 DID로 본다.
+    post_from 을 두는 이유: 이벤트 직후 몇 개월은 효과가 채 반영되기 전이라 제외.
+    """
     if event_df.empty:
         return {}
     res = {}
@@ -161,11 +166,13 @@ def diff_in_diff(event_df: pd.DataFrame) -> dict:
         g = event_df[event_df["group"] == grp]
         if g.empty:
             continue
-        pre = g[g["rel_month"] <= 0]["index_mean"].tail(1)
-        post = g[g["rel_month"] > 0]["index_mean"].tail(1)
+        pre = g[g["rel_month"] <= 0]["index_mean"]
+        post = g[g["rel_month"] >= post_from]["index_mean"]
+        if post.empty:  # 사후 안정구간이 없으면 사후 전체로 폴백
+            post = g[g["rel_month"] > 0]["index_mean"]
         if pre.empty or post.empty:
             continue
-        res[grp] = round(float(post.iloc[0]) - float(pre.iloc[0]), 1)
+        res[grp] = round(float(post.mean()) - float(pre.mean()), 1)
     if "treated" in res and "control" in res:
         res["did_effect_pp"] = round(res["treated"] - res["control"], 1)
     return res

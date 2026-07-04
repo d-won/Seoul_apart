@@ -6,10 +6,19 @@ data/raw/
 data/processed/*.parquet
 data/processed/*.csv
 
-# 분석 산출물 (재생성 가능) — 예시 차트는 예외로 커밋 가능
+# 분석 산출물 (재생성 가능) — 기본은 무시하되, 실데이터 산출물은 예외로 커밋
 outputs/*.png
 outputs/*.csv
 !outputs/.gitkeep
+# 실거래(2016.1–2026.6) 기반 산출물은 리포지토리에 포함
+!outputs/trend_overall.png
+!outputs/trend_overall.csv
+!outputs/trend_by_distance.png
+!outputs/trend_by_distance.csv
+!outputs/appreciation_by_distance.png
+!outputs/appreciation_by_distance.csv
+!outputs/event_study.png
+!outputs/event_study.csv
 
 # Python
 __pycache__/

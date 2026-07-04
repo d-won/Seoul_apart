@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 from tqdm import tqdm
 
-from . import analyze, fetch, geo, visualize
+from . import analyze, fetch, fetch_rt, geo, visualize
 from .config import (
     CONFIG_DIR,
     OUTPUT_DIR,
@@ -18,12 +18,35 @@ from .config import (
 )
 
 
-def collect(start_ym: str, end_ym: str, lawd_codes: list[str] | None = None) -> pd.DataFrame:
-    """지정 구·기간의 실거래를 수집해 정제 DataFrame으로 반환하고 raw 저장."""
-    key = load_service_key()
-    client = fetch.MolitClient(key)
+def collect(
+    start_ym: str,
+    end_ym: str,
+    lawd_codes: list[str] | None = None,
+    source: str = "api",
+) -> pd.DataFrame:
+    """지정 구·기간의 실거래를 수집해 정제 DataFrame으로 반환하고 raw 저장.
+
+    source:
+      'api' — 공공데이터포털 오픈API(apis.data.go.kr). 인증키 필요.
+      'rt'  — 국토부 실거래가 공개시스템(rt.molit.go.kr) 자료제공 CSV. 인증키 불필요.
+              (오픈API 접근이 막힌 환경의 대체 경로. 같은 국토부 원천 데이터.)
+    """
     areas = load_areas()
     codes = lawd_codes or sorted({a.lawd_cd for a in areas})
+
+    if source == "rt":
+        all_frames = []
+        for code in codes:
+            df = fetch_rt.collect_rt(start_ym, end_ym, [code])
+            if not df.empty:
+                fetch.save_raw(df, code, RAW_DIR)
+                all_frames.append(df)
+        if not all_frames:
+            return pd.DataFrame()
+        return pd.concat(all_frames, ignore_index=True)
+
+    key = load_service_key()
+    client = fetch.MolitClient(key)
     months = fetch.month_range(start_ym, end_ym)
 
     all_frames = []
