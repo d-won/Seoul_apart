@@ -6,10 +6,9 @@
   data/hourly_wage_monthly.csv   month,hourly_wage_won        ← KOSIS
   data/seoul_apt_monthly.csv     month,seoul_apt_avg_price_100m(또는 지수)  ← KOSIS
 
-주의: Claude Code 웹 실행 환경은 기본적으로 통계포털 접속이 차단된다.
-이 스크립트는 **외부망이 열린 환경**(본인 PC 또는 해당 도메인을 허용한 환경)에서
-실행해야 한다. 필요한 허용 도메인:
-  ecos.bok.or.kr, kosis.kr
+주의: 실행 환경의 네트워크 정책에 따라 통계포털 접속이 막힐 수 있다. 접속이 되는 환경에서
+실행하면 된다(필요 도메인: kosis.kr, ecos.bok.or.kr). 접속 확인:
+  curl -sS -o /dev/null -w "%{http_code}\\n" https://kosis.kr
 
 ── 키/URL (환경변수) ───────────────────────────────────────────────
 선택
@@ -20,10 +19,12 @@
 집값·임금(월별)에 필요 — KOSIS는 표마다 분류코드가 달라, 포털이 만들어 주는 'OpenAPI URL'을 그대로 쓰는 게 가장 확실하다.
   KOSIS 통계표 → 우측 상단 [OpenAPI] → '조회 URL' 생성(주기=월, 기간 지정) → 그 URL을 아래에 넣는다.
 
-  KOSIS_APT_URL       서울 아파트 실거래가격지수(월) getList URL
-                      예) https://kosis.kr/openapi/statisticsData.do?method=getList&apiKey=...&
+  KOSIS_APT_URL       서울 아파트 실거래가격지수(월) 조회 URL
+                      데이터 값은 Param/statisticsParameterData.do 엔드포인트가 반환한다:
+                      예) https://kosis.kr/openapi/Param/statisticsParameterData.do?method=getList&apiKey=...&
                           orgId=408&tblId=DT_KAB_11672_S1&prdSe=M&startPrdDe=200601&endPrdDe=202612&
-                          objL1=<서울코드>&itmId=<지수항목>&format=json&jsonVD=Y
+                          objL1=030&itmId=T1&objL2=&objL3=&objL4=&objL5=&objL6=&objL7=&objL8=&format=json&jsonVD=Y
+                      (objL1=030=서울, itmId=T1=지수. 코드 확인: method=getMeta&type=ITM. README 참고)
 
   시간당 임금(사업체노동력조사, 월). 표가 '시간당 임금총액'을 직접 주면 하나만:
   KOSIS_WAGE_URL      시간당 임금총액(원) getList URL

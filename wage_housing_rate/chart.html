@@ -1,4 +1,4 @@
-<title>임금 · 서울 아파트값 · 정책금리 (2005–2025)</title>
+<title>임금 · 서울 아파트 실거래가격지수 · 정책금리 (월별 실측)</title>
 <style>
   :root {
     color-scheme: light;
@@ -146,13 +146,14 @@
 <div class="wrap">
   <header>
     <div>
-      <p class="eyebrow">2005 — 2025 · 최근 20여 년</p>
-      <h1>시간당 임금 · 서울 아파트 실거래가 · 정책금리</h1>
-      <p class="lede">같은 기간을 세 개의 선으로. 임금은 꾸준히 올랐지만, 서울 아파트값은
-        2015년 이후 임금을 앞질렀고 <b>2025년 다시 급등</b>했습니다. 그 사이 정책금리는 두 번의 저금리기와 급등을 오갔습니다.</p>
+      <p class="eyebrow">월별 실측 · KOSIS 원자료</p>
+      <h1>시간당 임금 · 서울 아파트 실거래가격지수 · 정책금리</h1>
+      <p class="lede">세 지표를 <b>월별 실측치</b>로. 월별 임금 공식통계가 시작된 <b>2020년 1월 이후</b>,
+        서울 아파트 실거래가격지수는 <b>+47%</b> 오른 반면 시간당 명목임금은 <b>+12%</b>에 그쳤습니다.
+        그 사이 정책금리는 0.50%까지 내렸다가 3.50%까지 올랐습니다.</p>
       <p class="lede" style="margin-top:8px;font-size:13.5px;color:var(--muted)">
-        2026년(진행 중): 기준금리 7월 <b>2.75%로 인상</b> · 서울 집값 상승세 지속 · 임금 6월 조사값 미발표 →
-        연간값이 완성된 <b>2025년까지</b> 표시</p>
+        최신월: 아파트 실거래가격지수 <b>2026.4</b> · 시간당 임금 <b>2025.12</b> · 기준금리 <b>2026.7</b>(2.75%).
+        월별 임금 공식통계는 <b>2020.1부터</b> 제공돼, 그 이전 구간은 비워 두었습니다.</p>
     </div>
     <button class="theme-btn" id="themeBtn" aria-label="테마 전환">
       <span id="themeIcon">◐</span><span id="themeTxt">테마</span>
@@ -162,11 +163,12 @@
   <div class="kpis" id="kpis"></div>
 
   <section class="card">
-    <h2>임금 vs 서울 아파트값 — 2005년 = 100 지수 비교</h2>
-    <p class="note">단위가 다른 두 지표를 같은 출발선(2005년=100)에 놓고 상대 상승폭을 비교</p>
+    <h2>임금 vs 서울 아파트값 — 2020.1 = 100 지수 비교 (월별)</h2>
+    <p class="note">단위가 다른 두 지표를 공통 출발선(2020.1=100, 월별 임금 시작월)에 놓고 상대 상승폭을 비교.
+      아파트는 그 이전(2006~)도 함께 표시돼 100 아래에서 시작합니다.</p>
     <div class="legend">
-      <span><i style="background:var(--wage)"></i>시간당 명목임금</span>
-      <span><i style="background:var(--apt)"></i>서울 아파트 실거래가</span>
+      <span><i style="background:var(--wage)"></i>시간당 명목임금 (2020.1~)</span>
+      <span><i style="background:var(--apt)"></i>서울 아파트 실거래가격지수 (2006.1~)</span>
     </div>
     <div class="chart-host" id="heroHost"></div>
   </section>
@@ -185,47 +187,45 @@
     <div class="card prose" style="margin-top:12px">
       <h3>지표 정의</h3>
       <ul>
-        <li><b>시간당 명목임금</b> — 고용노동부 고용형태별근로실태조사·사업체노동력조사의
-          전체근로자 1인당 <b>시간당 임금총액</b>(원/시간, 매년 6월 기준).</li>
-        <li><b>서울 아파트 실거래가</b> — KB부동산 서울 아파트 <b>평균 매매가격</b>(억 원, 연말 기준).
-          직관적 가격 수준을 보여주며, 표에는 한국부동산원 <b>실거래가격지수</b>(2021≈100)도 함께 수록.</li>
-        <li><b>정책금리</b> — 한국은행 <b>기준금리</b>(%). 3번 패널은 변경 이력으로 구성한
-          <b>실제 월별</b> 시계열(2026.07 = 2.75%까지). 지수 비교·표는 연말값 사용.</li>
+        <li><b>시간당 명목임금</b> — KOSIS 사업체노동력조사(<code>DT_118N_MON051</code>) 전산업·전규모(1인이상)의
+          <b>전체 임금총액 ÷ 전체 근로시간</b>(원/시간, <b>월별</b>). 임금총액에 상여·특별급여가 포함돼
+          1월·분기말 등 상여 지급월은 값이 크게 튑니다(계절성).</li>
+        <li><b>서울 아파트 실거래가격지수</b> — 한국부동산원 아파트 매매 실거래가격지수·서울
+          (<code>DT_KAB_11672_S1</code>, <b>2017.11 = 100</b>, <b>월별</b>). 평균가(억원)가 아니라 지수입니다.</li>
+        <li><b>정책금리</b> — 한국은행 <b>기준금리</b>(%). 변경 이력으로 구성한 <b>월말 유효금리</b>
+          월별 시계열(2026.07 = 2.75%까지).</li>
       </ul>
-      <p style="margin:2px 0 0"><b>월별 데이터에 대해</b>: 세 지표 모두 원래는 월별 공식통계가 있습니다
-        (사업체노동력조사 월별 임금, 한국부동산원 월별 실거래가격지수, 기준금리 변경 이력).
-        이 중 <b>기준금리만</b> 공개 이력으로 정확히 월별 재구성이 가능해 월별로 그렸고,
-        임금·아파트 월별 원자료는 이 환경의 포털 접속 차단으로 받지 못해 확보된 연간·앵커값으로
-        표시했습니다. 월별 정밀 시계열은 <code>src/fetch_live.py</code>로 받을 수 있습니다.</p>
-      <h3>중요 한계</h3>
+      <p style="margin:2px 0 0"><b>데이터 수집</b>: 임금·아파트는 KOSIS OpenAPI에서 <b>월별 실측치</b>를
+        직접 받아 채웠고(<code>src/fetch_live.py</code>), 값은 <code>data/*_monthly.csv</code>로 저장돼 있습니다.
+        Artifact는 런타임 CSV 로드가 막혀 있어 값은 이 페이지에 인라인 임베드했습니다.</p>
+      <h3>유의 사항</h3>
       <ul>
-        <li>이 차트를 생성한 환경에서는 한국 통계포털(KOSIS·ECOS·한국부동산원) 직접 접속이
-          차단되어 <b>원자료 표를 직접 내려받지 못했습니다.</b> 값은 공개·보도로 확인된 앵커 수치와
-          공식 변동률로 재구성했습니다.</li>
-        <li>임금은 <b>2018년 이후 공식 수치</b>, 2005–2017년은 앵커 기반 후방외삽 <b>추정치</b>(표에 ·추정 표시).
-          2020년 표준산업분류 개편으로 2019년 이전과 계열 단절이 있어 2020년 값 하락에는 분류 개편 영향이 섞여 있습니다.</li>
-        <li>KB 평균 매매가격은 감정시세 평균이라 엄밀한 '실거래'가 아니며, 실거래가 흐름의 근사치입니다.</li>
-        <li>정확한 공식 수치는 KOSIS DT_118N_LCE0001(임금), DT_KAB_11672_S1(아파트 실거래가격지수),
-          ECOS 722Y001(기준금리)에서 API 키로 직접 갱신할 수 있습니다(리포지토리의 <code>src/fetch_live.py</code>).</li>
+        <li><b>월별 커버리지가 지표마다 다릅니다.</b> 시간당 임금 월별 공식통계는 <b>2020.1부터</b>,
+          아파트 실거래가격지수는 2006.1부터, 기준금리는 2005.1부터 제공됩니다.
+          받지 못한 구간은 <b>추정하지 않고 그대로 비워</b> 두었습니다.</li>
+        <li>지수 비교(히어로)는 두 계열이 모두 존재하는 <b>2020.1을 100</b>으로 맞춥니다.
+          아파트는 2006~2019 구간도 함께 그려 100 아래에서 시작합니다.</li>
+        <li>임금은 <b>명목</b>(물가 미반영)이며, 상여 포함으로 월 변동이 큽니다. 추세는 12개월 흐름으로 보세요.</li>
+        <li>서로 다른 표본·정의의 지표를 나란히 둔 <b>추세 비교</b>이며 인과 해석이 아닙니다.</li>
       </ul>
-      <h3>출처</h3>
+      <h3>출처 (KOSIS OpenAPI)</h3>
       <ul>
-        <li>고용노동부 / KOSIS 고용형태별·산업규모별 임금 및 근로시간</li>
-        <li>KB부동산 주택가격동향 · 한국부동산원 공동주택 실거래가격지수</li>
-        <li>한국은행 기준금리 결정 이력</li>
+        <li>한국부동산원 아파트 매매 실거래가격지수 — <code>DT_KAB_11672_S1</code> (orgId 408, 서울, 월)</li>
+        <li>고용노동부 사업체노동력조사 임금총액·근로시간 — <code>DT_118N_MON051</code> (orgId 118, 전산업·전규모, 월)</li>
+        <li>한국은행 기준금리 변경 이력 (월말 유효금리)</li>
       </ul>
     </div>
   </details>
 
-  <footer>2005–2025 세 지표 라인 차트 · 값은 확인 앵커+공식 변동률 기반 재구성(일부 추정 포함) · 인과 아닌 추세 비교용</footer>
+  <footer>세 지표 월별 라인 차트 · 값은 KOSIS OpenAPI 월별 실측치(임금 2020.1~, 아파트 지수 2006.1~, 기준금리 2005.1~) · 인과 아닌 추세 비교용</footer>
 </div>
 
 <script>
-const YEARS = [2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
-const WAGE  = [9300,9900,10500,11100,11700,12500,13300,14100,14900,15700,16600,17500,18500,19522,20573,19316,19806,22651,22878,25156,25839];
-const APT   = [4.0,4.6,4.9,4.9,5.0,4.8,4.8,4.7,4.8,5.1,5.6,5.9,6.7,8.1,8.6,10.6,12.5,11.8,11.6,13.0,15.1];
-const RATE  = [3.75,4.50,5.00,3.00,2.00,2.50,3.25,2.75,2.50,2.00,1.50,1.25,1.50,1.75,1.25,0.50,1.00,3.25,3.50,3.00,2.50];
-const APT_INDEX = [null,48,50,48,53,52,53,50,49,51,56,60,65,73,76,86,100,78,86,92,105]; // 한국부동산원 실거래가격지수
+// 월별 실측 (KOSIS OpenAPI, 인라인 임베드 — Artifact CSP상 런타임 CSV 로드 불가)
+// APT_M: 부동산원 아파트 매매 실거래가격지수·서울 (2017.11=100), 2006.01~2026.04
+// WAGE_M: 사업체노동력조사 전산업·전규모(1인이상) 시간당 임금 = 전체임금총액/전체근로시간(원/시간), 2020.01~2025.12
+const APT_M  = [[2006.0000,58.47,"2006.01"],[2006.0833,59.45,"2006.02"],[2006.1667,60.92,"2006.03"],[2006.2500,61.64,"2006.04"],[2006.3333,61.87,"2006.05"],[2006.4167,61.81,"2006.06"],[2006.5000,62.24,"2006.07"],[2006.5833,63.01,"2006.08"],[2006.6667,64.26,"2006.09"],[2006.7500,67.26,"2006.10"],[2006.8333,70.13,"2006.11"],[2006.9167,72.26,"2006.12"],[2007.0000,73.21,"2007.01"],[2007.0833,73.00,"2007.02"],[2007.1667,73.56,"2007.03"],[2007.2500,73.31,"2007.04"],[2007.3333,72.54,"2007.05"],[2007.4167,73.66,"2007.06"],[2007.5000,74.27,"2007.07"],[2007.5833,74.86,"2007.08"],[2007.6667,75.21,"2007.09"],[2007.7500,75.67,"2007.10"],[2007.8333,75.64,"2007.11"],[2007.9167,76.04,"2007.12"],[2008.0000,77.11,"2008.01"],[2008.0833,78.38,"2008.02"],[2008.1667,80.54,"2008.03"],[2008.2500,82.34,"2008.04"],[2008.3333,83.38,"2008.05"],[2008.4167,83.63,"2008.06"],[2008.5000,82.76,"2008.07"],[2008.5833,82.55,"2008.08"],[2008.6667,80.67,"2008.09"],[2008.7500,77.61,"2008.10"],[2008.8333,72.69,"2008.11"],[2008.9167,68.26,"2008.12"],[2009.0000,71.06,"2009.01"],[2009.0833,74.06,"2009.02"],[2009.1667,75.04,"2009.03"],[2009.2500,77.18,"2009.04"],[2009.3333,78.72,"2009.05"],[2009.4167,80.44,"2009.06"],[2009.5000,81.97,"2009.07"],[2009.5833,83.89,"2009.08"],[2009.6667,84.68,"2009.09"],[2009.7500,84.18,"2009.10"],[2009.8333,83.02,"2009.11"],[2009.9167,82.74,"2009.12"],[2010.0000,83.81,"2010.01"],[2010.0833,83.89,"2010.02"],[2010.1667,83.13,"2010.03"],[2010.2500,81.34,"2010.04"],[2010.3333,79.98,"2010.05"],[2010.4167,79.34,"2010.06"],[2010.5000,78.20,"2010.07"],[2010.5833,77.90,"2010.08"],[2010.6667,78.34,"2010.09"],[2010.7500,78.39,"2010.10"],[2010.8333,79.20,"2010.11"],[2010.9167,80.15,"2010.12"],[2011.0000,81.20,"2011.01"],[2011.0833,81.96,"2011.02"],[2011.1667,81.69,"2011.03"],[2011.2500,81.20,"2011.04"],[2011.3333,80.62,"2011.05"],[2011.4167,80.03,"2011.06"],[2011.5000,80.05,"2011.07"],[2011.5833,80.16,"2011.08"],[2011.6667,80.01,"2011.09"],[2011.7500,79.40,"2011.10"],[2011.8333,78.60,"2011.11"],[2011.9167,77.73,"2011.12"],[2012.0000,78.00,"2012.01"],[2012.0833,77.73,"2012.02"],[2012.1667,77.08,"2012.03"],[2012.2500,76.19,"2012.04"],[2012.3333,75.79,"2012.05"],[2012.4167,75.25,"2012.06"],[2012.5000,74.22,"2012.07"],[2012.5833,73.57,"2012.08"],[2012.6667,73.17,"2012.09"],[2012.7500,73.04,"2012.10"],[2012.8333,72.77,"2012.11"],[2012.9167,72.06,"2012.12"],[2013.0000,72.46,"2013.01"],[2013.0833,72.66,"2013.02"],[2013.1667,73.36,"2013.03"],[2013.2500,73.65,"2013.04"],[2013.3333,73.87,"2013.05"],[2013.4167,73.44,"2013.06"],[2013.5000,73.33,"2013.07"],[2013.5833,73.71,"2013.08"],[2013.6667,74.24,"2013.09"],[2013.7500,74.68,"2013.10"],[2013.8333,74.48,"2013.11"],[2013.9167,74.30,"2013.12"],[2014.0000,75.01,"2014.01"],[2014.0833,75.62,"2014.02"],[2014.1667,76.00,"2014.03"],[2014.2500,75.94,"2014.04"],[2014.3333,75.65,"2014.05"],[2014.4167,75.63,"2014.06"],[2014.5000,75.70,"2014.07"],[2014.5833,76.39,"2014.08"],[2014.6667,77.10,"2014.09"],[2014.7500,77.49,"2014.10"],[2014.8333,77.43,"2014.11"],[2014.9167,77.43,"2014.12"],[2015.0000,77.89,"2015.01"],[2015.0833,78.51,"2015.02"],[2015.1667,79.39,"2015.03"],[2015.2500,80.17,"2015.04"],[2015.3333,80.84,"2015.05"],[2015.4167,81.39,"2015.06"],[2015.5000,82.45,"2015.07"],[2015.5833,83.18,"2015.08"],[2015.6667,83.85,"2015.09"],[2015.7500,84.39,"2015.10"],[2015.8333,84.74,"2015.11"],[2015.9167,84.38,"2015.12"],[2016.0000,84.27,"2016.01"],[2016.0833,84.44,"2016.02"],[2016.1667,84.45,"2016.03"],[2016.2500,84.79,"2016.04"],[2016.3333,85.49,"2016.05"],[2016.4167,86.52,"2016.06"],[2016.5000,87.92,"2016.07"],[2016.5833,89.18,"2016.08"],[2016.6667,90.38,"2016.09"],[2016.7500,91.56,"2016.10"],[2016.8333,91.78,"2016.11"],[2016.9167,91.24,"2016.12"],[2017.0000,90.97,"2017.01"],[2017.0833,90.98,"2017.02"],[2017.1667,91.68,"2017.03"],[2017.2500,91.93,"2017.04"],[2017.3333,93.35,"2017.05"],[2017.4167,95.26,"2017.06"],[2017.5000,97.72,"2017.07"],[2017.5833,98.04,"2017.08"],[2017.6667,98.24,"2017.09"],[2017.7500,99.35,"2017.10"],[2017.8333,100.00,"2017.11"],[2017.9167,100.96,"2017.12"],[2018.0000,103.07,"2018.01"],[2018.0833,104.87,"2018.02"],[2018.1667,106.21,"2018.03"],[2018.2500,107.58,"2018.04"],[2018.3333,108.13,"2018.05"],[2018.4167,108.73,"2018.06"],[2018.5000,110.40,"2018.07"],[2018.5833,115.17,"2018.08"],[2018.6667,121.76,"2018.09"],[2018.7500,122.63,"2018.10"],[2018.8333,120.81,"2018.11"],[2018.9167,119.46,"2018.12"],[2019.0000,118.15,"2019.01"],[2019.0833,117.29,"2019.02"],[2019.1667,116.31,"2019.03"],[2019.2500,116.32,"2019.04"],[2019.3333,117.39,"2019.05"],[2019.4167,119.82,"2019.06"],[2019.5000,122.39,"2019.07"],[2019.5833,124.15,"2019.08"],[2019.6667,125.54,"2019.09"],[2019.7500,127.56,"2019.10"],[2019.8333,129.99,"2019.11"],[2019.9167,132.26,"2019.12"],[2020.0000,133.42,"2020.01"],[2020.0833,135.38,"2020.02"],[2020.1667,136.44,"2020.03"],[2020.2500,135.35,"2020.04"],[2020.3333,135.94,"2020.05"],[2020.4167,141.05,"2020.06"],[2020.5000,148.26,"2020.07"],[2020.5833,153.02,"2020.08"],[2020.6667,155.14,"2020.09"],[2020.7500,156.39,"2020.10"],[2020.8333,159.38,"2020.11"],[2020.9167,162.71,"2020.12"],[2021.0000,167.91,"2021.01"],[2021.0833,170.17,"2021.02"],[2021.1667,171.15,"2021.03"],[2021.2500,172.13,"2021.04"],[2021.3333,175.76,"2021.05"],[2021.4167,180.06,"2021.06"],[2021.5000,184.01,"2021.07"],[2021.5833,187.59,"2021.08"],[2021.6667,190.45,"2021.09"],[2021.7500,190.92,"2021.10"],[2021.8333,188.04,"2021.11"],[2021.9167,184.65,"2021.12"],[2022.0000,183.84,"2022.01"],[2022.0833,181.94,"2022.02"],[2022.1667,184.76,"2022.03"],[2022.2500,185.59,"2022.04"],[2022.3333,183.45,"2022.05"],[2022.4167,183.47,"2022.06"],[2022.5000,176.48,"2022.07"],[2022.5833,171.10,"2022.08"],[2022.6667,166.42,"2022.09"],[2022.7500,158.72,"2022.10"],[2022.8333,150.21,"2022.11"],[2022.9167,144.54,"2022.12"],[2023.0000,145.87,"2023.01"],[2023.0833,148.85,"2023.02"],[2023.1667,150.99,"2023.03"],[2023.2500,153.24,"2023.04"],[2023.3333,154.99,"2023.05"],[2023.4167,157.61,"2023.06"],[2023.5000,159.30,"2023.07"],[2023.5833,161.25,"2023.08"],[2023.6667,162.82,"2023.09"],[2023.7500,162.85,"2023.10"],[2023.8333,160.44,"2023.11"],[2023.9167,158.35,"2023.12"],[2024.0000,158.86,"2024.01"],[2024.0833,159.55,"2024.02"],[2024.1667,159.70,"2024.03"],[2024.2500,160.72,"2024.04"],[2024.3333,161.86,"2024.05"],[2024.4167,164.07,"2024.06"],[2024.5000,167.54,"2024.07"],[2024.5833,170.30,"2024.08"],[2024.6667,170.85,"2024.09"],[2024.7500,170.72,"2024.10"],[2024.8333,170.56,"2024.11"],[2024.9167,169.83,"2024.12"],[2025.0000,169.66,"2025.01"],[2025.0833,171.14,"2025.02"],[2025.1667,173.45,"2025.03"],[2025.2500,173.96,"2025.04"],[2025.3333,175.27,"2025.05"],[2025.4167,179.10,"2025.06"],[2025.5000,181.12,"2025.07"],[2025.5833,180.71,"2025.08"],[2025.6667,184.13,"2025.09"],[2025.7500,187.15,"2025.10"],[2025.8333,189.73,"2025.11"],[2025.9167,190.34,"2025.12"],[2026.0000,192.96,"2026.01"],[2026.0833,196.59,"2026.02"],[2026.1667,196.18,"2026.03"],[2026.2500,196.33,"2026.04"]];
+const WAGE_M = [[2020.0000,25964,"2020.01"],[2020.0833,21664,"2020.02"],[2020.1667,20600,"2020.03"],[2020.2500,21433,"2020.04"],[2020.3333,21885,"2020.05"],[2020.4167,20020,"2020.06"],[2020.5000,20372,"2020.07"],[2020.5833,21954,"2020.08"],[2020.6667,23524,"2020.09"],[2020.7500,22150,"2020.10"],[2020.8333,20256,"2020.11"],[2020.9167,24003,"2020.12"],[2021.0000,24648,"2021.01"],[2021.0833,27662,"2021.02"],[2021.1667,21373,"2021.03"],[2021.2500,20627,"2021.04"],[2021.3333,22502,"2021.05"],[2021.4167,20678,"2021.06"],[2021.5000,22395,"2021.07"],[2021.5833,22119,"2021.08"],[2021.6667,26516,"2021.09"],[2021.7500,22822,"2021.10"],[2021.8333,20341,"2021.11"],[2021.9167,24968,"2021.12"],[2022.0000,30134,"2022.01"],[2022.0833,26131,"2022.02"],[2022.1667,23920,"2022.03"],[2022.2500,22055,"2022.04"],[2022.3333,22198,"2022.05"],[2022.4167,23374,"2022.06"],[2022.5000,24239,"2022.07"],[2022.5833,22725,"2022.08"],[2022.6667,26455,"2022.09"],[2022.7500,24049,"2022.10"],[2022.8333,21351,"2022.11"],[2022.9167,26613,"2022.12"],[2023.0000,30521,"2023.01"],[2023.0833,25513,"2023.02"],[2023.1667,23463,"2023.03"],[2023.2500,23968,"2023.04"],[2023.3333,23938,"2023.05"],[2023.4167,23458,"2023.06"],[2023.5000,24938,"2023.07"],[2023.5833,23230,"2023.08"],[2023.6667,29160,"2023.09"],[2023.7500,25815,"2023.10"],[2023.8333,22430,"2023.11"],[2023.9167,29012,"2023.12"],[2024.0000,25994,"2024.01"],[2024.0833,29885,"2024.02"],[2024.1667,26058,"2024.03"],[2024.2500,24253,"2024.04"],[2024.3333,24935,"2024.05"],[2024.4167,26177,"2024.06"],[2024.5000,25175,"2024.07"],[2024.5833,24856,"2024.08"],[2024.6667,30832,"2024.09"],[2024.7500,25752,"2024.10"],[2024.8333,23853,"2024.11"],[2024.9167,29203,"2024.12"],[2025.0000,35324,"2025.01"],[2025.0833,27087,"2025.02"],[2025.1667,26982,"2025.03"],[2025.2500,23992,"2025.04"],[2025.3333,26642,"2025.05"],[2025.4167,26977,"2025.06"],[2025.5000,24941,"2025.07"],[2025.5833,26162,"2025.08"],[2025.6667,26271,"2025.09"],[2025.7500,30257,"2025.10"],[2025.8333,25814,"2025.11"],[2025.9167,29105,"2025.12"]];
 
 // 정책금리 월별(실제): 한국은행 기준금리 변경 이력 → 월말 유효금리. 2026-07 = 2.75%(현재)
 const RATE_CHANGES = [["2005-01",3.25],["2005-10",3.50],["2005-12",3.75],["2006-02",4.00],["2006-06",4.25],
@@ -249,109 +249,14 @@ function expandMonthly(changes,endYM){
   return pts;
 }
 const RATE_M = expandMonthly(RATE_CHANGES,"2026-07");
-// official-from-year flags
-const WAGE_OFFICIAL_FROM = 2018;
-const APT_CONFIRMED = {2018:1,2019:1,2020:1,2025:1};
-
 function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
-function idx100(a){ const b=a[0]; return a.map(function(v){return v/b*100;}); }
-const WAGE_IDX = idx100(WAGE);
-const APT_IDX  = idx100(APT);
-
-// ---------- generic SVG line chart (pixel viewBox, uniform scaling) ----------
-function makeChart(host, opts){
-  // opts: { series:[{values,color,name}], yFmt, valFmt, tipFmt, height, yTicks, compact }
-  const W = opts.compact ? 380 : 760, H = opts.height || 300;
-  const padL = opts.compact ? 38 : 56, padR = opts.compact ? 26 : 52, padT = 14, padB = 26;
-  const n = YEARS.length;
-  const allVals = opts.series.reduce(function(acc,s){ return acc.concat(s.values.filter(function(v){return v!=null;})); }, []);
-  let ymin = Math.min.apply(null, allVals), ymax = Math.max.apply(null, allVals);
-  if (opts.yMin != null) ymin = opts.yMin;
-  const span = ymax - ymin || 1;
-  ymin -= span*0.10; ymax += span*0.10;
-  const x = function(i){ return padL + (W-padL-padR) * (i/(n-1)); };
-  const y = function(v){ return padT + (H-padT-padB) * (1-(v-ymin)/(ymax-ymin)); };
-
-  const NS="http://www.w3.org/2000/svg";
-  const svg=document.createElementNS(NS,"svg");
-  svg.setAttribute("viewBox","0 0 "+W+" "+H);
-  svg.style.aspectRatio = W+" / "+H;
-  function el(t,a){ const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); return e; }
-
-  // y gridlines + ticks
-  const ticks = niceTicks(ymin, ymax, opts.yTicks||4);
-  ticks.forEach(function(t){
-    if (t < ymin || t > ymax) return;
-    svg.appendChild(el("line",{class:"gridline",x1:padL,x2:W-padR,y1:y(t),y2:y(t)}));
-    const tx=el("text",{class:"tick",x:padL-8,y:y(t)+4,"text-anchor":"end"});
-    tx.textContent=opts.yFmt(t);
-    svg.appendChild(tx);
-  });
-  // x ticks (every 3 yrs + last)
-  YEARS.forEach(function(yr,i){
-    if (i%3!==0) return;
-    const tx=el("text",{class:"tick",x:x(i),y:H-8,"text-anchor":"middle"});
-    tx.textContent="’"+String(yr).slice(2);
-    svg.appendChild(tx);
-  });
-
-  // series
-  opts.series.forEach(function(s){
-    let d="", started=false;
-    s.values.forEach(function(v,i){
-      if (v==null){ started=false; return; }
-      d += (started?" L":"M")+x(i)+" "+y(v); started=true;
-    });
-    svg.appendChild(el("path",{class:"series-line",d:d,stroke:s.color}));
-    const li=lastIdx(s.values);
-    if (li>=0){
-      svg.appendChild(el("circle",{class:"series-dot",cx:x(li),cy:y(s.values[li]),r:3.4,fill:s.color}));
-      const lb=el("text",{class:"end-label",x:x(li)+7,y:y(s.values[li])+4,fill:s.color});
-      lb.textContent=opts.valFmt(s.values[li]);
-      svg.appendChild(lb);
-    }
-  });
-
-  // hover layer
-  const cross=el("line",{class:"crosshair",y1:padT,y2:H-padB});
-  svg.appendChild(cross);
-  const hoverDots=opts.series.map(function(s){
-    const c=el("circle",{class:"hover-dot",r:4,fill:s.color,stroke:"var(--surface)","stroke-width":1.6});
-    svg.appendChild(c); return c;
-  });
-  const overlay=el("rect",{x:0,y:0,width:W,height:H,fill:"transparent",style:"cursor:crosshair"});
-  svg.appendChild(overlay);
-
-  const tip=document.createElement("div"); tip.className="tooltip"; host.appendChild(tip);
-
-  function move(ev){
-    const r=svg.getBoundingClientRect();
-    const px=(ev.clientX-r.left)/r.width*W;
-    let i=Math.round((px-padL)/((W-padL-padR)/(n-1)));
-    i=Math.max(0,Math.min(n-1,i));
-    cross.setAttribute("x1",x(i)); cross.setAttribute("x2",x(i)); cross.style.opacity=1;
-    let rows="";
-    opts.series.forEach(function(s,k){
-      const v=s.values[i];
-      if (v==null){ hoverDots[k].style.opacity=0; return; }
-      hoverDots[k].setAttribute("cx",x(i)); hoverDots[k].setAttribute("cy",y(v)); hoverDots[k].style.opacity=1;
-      rows+='<div class="ttrow"><i style="background:'+s.color+'"></i>'+
-            (s.name?s.name+" ":"")+'<b>'+opts.tipFmt(v)+'</b></div>';
-    });
-    tip.innerHTML='<span class="ttyear">'+YEARS[i]+'년</span>'+rows;
-    tip.style.left=(x(i)/W*r.width)+"px";
-    tip.style.top=(padT/H*r.height)+"px";
-    tip.style.opacity=1;
-  }
-  overlay.addEventListener("mousemove",move);
-  overlay.addEventListener("mouseleave",function(){
-    tip.style.opacity=0; cross.style.opacity=0; hoverDots.forEach(function(d){d.style.opacity=0;});
-  });
-  overlay.addEventListener("touchstart",function(e){ move(e.touches[0]); },{passive:true});
-  overlay.addEventListener("touchmove",function(e){ move(e.touches[0]); },{passive:true});
-
-  host.insertBefore(svg, tip);
-}
+// 공통 기준월 2020.01 = 100 (월별 임금 자료 시작월). 서로 다른 시점을 100으로 잡으면 비교가 왜곡됨.
+const BASE_T = 2020.0;
+function rebase(pts){ const b=pts.find(function(p){return p[0]>=BASE_T-1e-9;})[1]; return pts.map(function(p){return [p[0],p[1]/b*100,p[2]];}); }
+const WAGE_IDX_M = rebase(WAGE_M), APT_IDX_M = rebase(APT_M);
+const WAGE_LAST = WAGE_M[WAGE_M.length-1], APT_LAST = APT_M[APT_M.length-1];
+const APT_UP_20 = Math.round(APT_IDX_M[APT_IDX_M.length-1][1]-100);   // 2020.1 대비 아파트 %
+const WAGE_UP_20 = Math.round(WAGE_IDX_M[WAGE_IDX_M.length-1][1]-100);
 
 // ---------- monthly (time-axis) line chart ----------
 function makeMonthly(host, opts){
@@ -414,6 +319,59 @@ function makeMonthly(host, opts){
   host.insertBefore(svg, tip);
 }
 
+function makeMonthlyMulti(host, opts){
+  // 여러 계열을 하나의 시간축에 그린다(계열마다 기간이 달라도 됨). opts.series:[{points,color,name}]
+  const W = 760, H = opts.height || 300;
+  const padL = 56, padR = 60, padT = 14, padB = 26;
+  const S = opts.series;
+  let tMin=Infinity,tMax=-Infinity,ymin=Infinity,ymax=-Infinity;
+  S.forEach(function(s){ s.points.forEach(function(p){ if(p[0]<tMin)tMin=p[0]; if(p[0]>tMax)tMax=p[0]; if(p[1]<ymin)ymin=p[1]; if(p[1]>ymax)ymax=p[1]; }); });
+  const span=ymax-ymin||1; ymin-=span*0.10; ymax+=span*0.10;
+  const x=function(t){return padL+(W-padL-padR)*(t-tMin)/(tMax-tMin);};
+  const y=function(v){return padT+(H-padT-padB)*(1-(v-ymin)/(ymax-ymin));};
+  const NS="http://www.w3.org/2000/svg";
+  const svg=document.createElementNS(NS,"svg"); svg.setAttribute("viewBox","0 0 "+W+" "+H); svg.style.aspectRatio=W+" / "+H;
+  function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+  const ticks=niceTicks(ymin,ymax,opts.yTicks||4);
+  ticks.forEach(function(t){ if(t<ymin||t>ymax)return;
+    svg.appendChild(el("line",{class:"gridline",x1:padL,x2:W-padR,y1:y(t),y2:y(t)}));
+    const tx=el("text",{class:"tick",x:padL-8,y:y(t)+4,"text-anchor":"end"}); tx.textContent=opts.yFmt(t); svg.appendChild(tx); });
+  for(let yr=Math.ceil(tMin);yr<=Math.floor(tMax);yr++){ if(yr%3!==0)continue;
+    const tx=el("text",{class:"tick",x:x(yr),y:H-8,"text-anchor":"middle"}); tx.textContent="’"+String(yr).slice(2); svg.appendChild(tx); }
+  S.forEach(function(s){
+    let d=""; s.points.forEach(function(p,i){ d+=(i===0?"M":" L")+x(p[0])+" "+y(p[1]); });
+    svg.appendChild(el("path",{class:"series-line",d:d,stroke:s.color}));
+    const last=s.points[s.points.length-1];
+    svg.appendChild(el("circle",{class:"series-dot",cx:x(last[0]),cy:y(last[1]),r:3.4,fill:s.color}));
+    const lb=el("text",{class:"end-label",x:x(last[0])+7,y:y(last[1])+4,fill:s.color}); lb.textContent=opts.valFmt(last[1]); svg.appendChild(lb);
+  });
+  const cross=el("line",{class:"crosshair",y1:padT,y2:H-padB}); svg.appendChild(cross);
+  const hds=S.map(function(s){ const c=el("circle",{class:"hover-dot",r:4,fill:s.color,stroke:"var(--surface)","stroke-width":1.6}); svg.appendChild(c); return c; });
+  const overlay=el("rect",{x:0,y:0,width:W,height:H,fill:"transparent",style:"cursor:crosshair"}); svg.appendChild(overlay);
+  const tip=document.createElement("div"); tip.className="tooltip"; host.appendChild(tip);
+  function nearest(pts,t){ let bi=0,bd=1e9; for(let i=0;i<pts.length;i++){const dd=Math.abs(pts[i][0]-t); if(dd<bd){bd=dd;bi=i;}} return bi; }
+  function move(ev){
+    const r=svg.getBoundingClientRect();
+    const t=tMin+(((ev.clientX-r.left)/r.width*W)-padL)/(W-padL-padR)*(tMax-tMin);
+    let label=""; let rows="";
+    S.forEach(function(s,k){
+      if(t<s.points[0][0]-0.5||t>s.points[s.points.length-1][0]+0.5){ hds[k].style.opacity=0; return; }
+      const p=s.points[nearest(s.points,t)]; label=p[2];
+      hds[k].setAttribute("cx",x(p[0])); hds[k].setAttribute("cy",y(p[1])); hds[k].style.opacity=1;
+      rows+='<div class="ttrow"><i style="background:'+s.color+'"></i>'+(s.name?s.name+" ":"")+'<b>'+opts.tipFmt(p[1])+'</b></div>';
+      cross.setAttribute("x1",x(p[0])); cross.setAttribute("x2",x(p[0]));
+    });
+    cross.style.opacity=1;
+    tip.innerHTML='<span class="ttyear">'+label+'</span>'+rows;
+    tip.style.left=(x(t)/W*r.width)+"px"; tip.style.top=(padT/H*r.height)+"px"; tip.style.opacity=1;
+  }
+  overlay.addEventListener("mousemove",move);
+  overlay.addEventListener("mouseleave",function(){ tip.style.opacity=0; cross.style.opacity=0; hds.forEach(function(d){d.style.opacity=0;}); });
+  overlay.addEventListener("touchstart",function(e){move(e.touches[0]);},{passive:true});
+  overlay.addEventListener("touchmove",function(e){move(e.touches[0]);},{passive:true});
+  host.insertBefore(svg,tip);
+}
+
 function lastIdx(a){ for(let i=a.length-1;i>=0;i--) if(a[i]!=null) return i; return -1; }
 function niceTicks(min,max,count){
   const raw=(max-min)/count; const mag=Math.pow(10,Math.floor(Math.log10(raw)));
@@ -423,49 +381,44 @@ function niceTicks(min,max,count){
   return out;
 }
 const won=function(v){return Math.round(v).toLocaleString();};
-const eok=function(v){return v.toFixed(1);};
 const pct=function(v){return (v%1===0?v.toFixed(0):v.toFixed(2))+"";};
 
-// ---------- render KPIs ----------
-function pctChange(a){ return Math.round((a[a.length-1]/a[0]-1)*100); }
-const LAST = YEARS.length-1;
+// ---------- render KPIs (월별 실측·최신월 기준) ----------
 document.getElementById("kpis").innerHTML =
- kpiCard("var(--wage)","시간당 명목임금 (2025)","25,839원",
-   "2005년 대비 <b>"+pctChange(WAGE)+"%</b> ↑ · 지수 "+Math.round(WAGE_IDX[LAST])) +
- kpiCard("var(--apt)","서울 아파트 평균가 (2025)","15.1억원",
-   '<span class="up">'+pctChange(APT)+"%</span> · 지수 "+Math.round(APT_IDX[LAST])+" (임금 크게 앞섬)") +
+ kpiCard("var(--wage)","시간당 명목임금 ("+WAGE_LAST[2]+")", WAGE_LAST[1].toLocaleString()+"원",
+   "월별 실측(2020.1~) · 2020.1=100 지수 <b>"+Math.round(WAGE_IDX_M[WAGE_IDX_M.length-1][1])+"</b> · 상여 지급월(1·분기말) 급등 포함") +
+ kpiCard("var(--apt)","서울 아파트 실거래가격지수 ("+APT_LAST[2]+")", APT_LAST[1].toFixed(1),
+   '2017.11=100 · 2020.1 대비 <span class="up">'+APT_UP_20+"%</span> (임금 +"+WAGE_UP_20+"%를 크게 앞섬)") +
  kpiCard("var(--rate)","정책금리 (기준금리)","2.75%",
-   "<b>2026.07 현재</b>(월별) · 2025년말 2.50% · 20년 저점 0.50%(2020)~고점 5.25%(2008)");
+   "<b>2026.07 현재</b>(월별) · 20년 저점 0.50%(2020)~고점 5.25%(2008)");
 function kpiCard(color,lab,val,sub){
   return '<div class="kpi"><p class="lab"><span class="dot" style="background:'+color+'"></span>'+lab+
     '</p><div class="val">'+val+'</div><p class="sub">'+sub+'</p></div>';
 }
 
-// ---------- hero: indexed comparison ----------
-makeChart(document.getElementById("heroHost"), {
-  height: 300,
-  series:[
-    {values:WAGE_IDX, color:cssVar("--wage")||"#2a78d6", name:"임금"},
-    {values:APT_IDX,  color:cssVar("--apt")||"#eb6834", name:"아파트"}
-  ],
-  yFmt:function(v){return Math.round(v);}, valFmt:function(v){return Math.round(v);},
-  tipFmt:function(v){return Math.round(v);}, yTicks:4
-});
+// ---------- hero: indexed monthly comparison (2020.01=100) ----------
+function renderHero(){
+  makeMonthlyMulti(document.getElementById("heroHost"), {
+    height: 300,
+    series:[
+      {points:WAGE_IDX_M, color:cssVar("--wage")||"#2a78d6", name:"임금"},
+      {points:APT_IDX_M,  color:cssVar("--apt")||"#eb6834", name:"아파트"}
+    ],
+    yFmt:function(v){return Math.round(v);}, valFmt:function(v){return Math.round(v);},
+    tipFmt:function(v){return Math.round(v);}, yTicks:4
+  });
+}
+renderHero();
 
 // ---------- 3 small-multiple panels ----------
 const panelDefs=[
-  {t:"① 시간당 명목임금", u:"원/시간 · 연간(~2025)", vals:WAGE, color:"--wage", yFmt:function(v){return (v/1000).toFixed(0)+"천";}, valFmt:won, tipFmt:function(v){return won(v)+"원";}},
-  {t:"② 서울 아파트 평균 실거래가", u:"억 원 · 연간(~2025)", vals:APT, color:"--apt", yFmt:function(v){return v.toFixed(0);}, valFmt:eok, tipFmt:function(v){return v.toFixed(1)+"억";}},
-  {t:"③ 정책금리 (기준금리)", u:"% · 월별(2026.07까지)", monthly:true, points:RATE_M, color:"--rate", yFmt:function(v){return v.toFixed(0);}, valFmt:function(v){return v.toFixed(2);}, tipFmt:function(v){return v.toFixed(2)+"%";}}
+  {t:"① 시간당 명목임금", u:"원/시간 · 월별(2020.1~2025.12)", points:WAGE_M, color:"--wage", yFmt:function(v){return (v/1000).toFixed(0)+"천";}, valFmt:won, tipFmt:function(v){return won(v)+"원";}},
+  {t:"② 서울 아파트 실거래가격지수", u:"2017.11=100 · 월별(2006.1~2026.4)", points:APT_M, color:"--apt", yFmt:function(v){return v.toFixed(0);}, valFmt:function(v){return v.toFixed(1);}, tipFmt:function(v){return v.toFixed(1);}},
+  {t:"③ 정책금리 (기준금리)", u:"% · 월별(2026.07까지)", points:RATE_M, color:"--rate", yFmt:function(v){return v.toFixed(0);}, valFmt:function(v){return v.toFixed(2);}, tipFmt:function(v){return v.toFixed(2)+"%";}}
 ];
 function renderPanel(p, host){
-  if (p.monthly){
-    makeMonthly(host,{ height:250, compact:true, points:p.points, color:cssVar(p.color),
-      yFmt:p.yFmt, valFmt:p.valFmt, tipFmt:p.tipFmt, yTicks:4 });
-  } else {
-    makeChart(host,{ height:250, compact:true, series:[{values:p.vals, color:cssVar(p.color)}],
-      yFmt:p.yFmt, valFmt:p.valFmt, tipFmt:p.tipFmt, yTicks:4 });
-  }
+  makeMonthly(host,{ height:250, compact:true, points:p.points, color:cssVar(p.color),
+    yFmt:p.yFmt, valFmt:p.valFmt, tipFmt:p.tipFmt, yTicks:4 });
 }
 const panelsEl=document.getElementById("panels");
 panelDefs.forEach(function(p){
@@ -478,15 +431,16 @@ panelDefs.forEach(function(p){
 
 // ---------- data table ----------
 (function(){
-  let h='<thead><tr><th>연도</th><th>시간당임금(원)</th><th>서울아파트(억)</th><th>실거래가지수</th><th>기준금리(%)</th></tr></thead><tbody>';
-  YEARS.forEach(function(yr,i){
-    const wEst = yr<WAGE_OFFICIAL_FROM ? ' class="est"' : '';
-    const aEst = APT_CONFIRMED[yr] ? '' : ' class="est"';
-    h+='<tr><td>'+yr+'</td>'+
-       '<td'+wEst+'>'+WAGE[i].toLocaleString()+'</td>'+
-       '<td'+aEst+'>'+APT[i].toFixed(1)+'</td>'+
-       '<td class="est">'+(APT_INDEX[i]==null?'—':APT_INDEX[i])+'</td>'+
-       '<td>'+RATE[i].toFixed(2)+'</td></tr>';
+  const map={};
+  function put(arr,key){ arr.forEach(function(p){ (map[p[2]]=map[p[2]]||{t:p[0]})[key]=p[1]; }); }
+  put(WAGE_M,'w'); put(APT_M,'a'); put(RATE_M,'r');
+  const rows=Object.keys(map).map(function(k){return [map[k].t,k,map[k]];}).sort(function(a,b){return a[0]-b[0];});
+  let h='<thead><tr><th>월</th><th>시간당임금(원)</th><th>아파트 실거래가지수</th><th>기준금리(%)</th></tr></thead><tbody>';
+  rows.forEach(function(r){ const m=r[2];
+    h+='<tr><td>'+r[1]+'</td>'+
+       '<td>'+(m.w!=null?Math.round(m.w).toLocaleString():'—')+'</td>'+
+       '<td>'+(m.a!=null?m.a.toFixed(1):'—')+'</td>'+
+       '<td>'+(m.r!=null?m.r.toFixed(2):'—')+'</td></tr>';
   });
   document.getElementById("dataTable").innerHTML=h+'</tbody>';
 })();
@@ -506,13 +460,9 @@ panelDefs.forEach(function(p){
   btn.addEventListener("click",function(){ apply(cur()==="dark"?"light":"dark"); rerender(); });
 })();
 function rerender(){
-  ["heroHost"].forEach(function(id){ const h=document.getElementById(id); h.innerHTML=""; });
+  document.getElementById("heroHost").innerHTML="";
   document.getElementById("panels").innerHTML="";
-  makeChart(document.getElementById("heroHost"), {
-    height:300,
-    series:[{values:WAGE_IDX,color:cssVar("--wage"),name:"임금"},{values:APT_IDX,color:cssVar("--apt"),name:"아파트"}],
-    yFmt:function(v){return Math.round(v);}, valFmt:function(v){return Math.round(v);}, tipFmt:function(v){return Math.round(v);}, yTicks:4
-  });
+  renderHero();
   panelDefs.forEach(function(p){
     const card=document.createElement("section"); card.className="card";
     card.innerHTML='<h2 style="font-size:15px">'+p.t+'</h2><p class="note">'+p.u+'</p>';

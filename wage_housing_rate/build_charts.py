@@ -118,9 +118,9 @@ def fig_three_panels(wage, wmode, apt, amode, rate, rmode):
     axes[0].set_ylabel(L("원 / 시간", "KRW / hour"), fontsize=10, color=MUTED)
 
     _plot_series(axes[1], apt, amode, C_APT, lambda v: f"{v:,.1f}")
-    axes[1].set_title(L("② 서울 아파트 실거래가", "2) Seoul apt. transaction price"),
+    axes[1].set_title(L("② 서울 아파트 실거래가격지수", "2) Seoul apt. real-transaction price index"),
                       fontsize=12, color=INK, loc="left", pad=8)
-    axes[1].set_ylabel(L("억 원", "100M KRW"), fontsize=10, color=MUTED)
+    axes[1].set_ylabel(L("지수 (2017.11=100)", "Index (2017.11=100)"), fontsize=10, color=MUTED)
 
     _plot_series(axes[2], rate, rmode, C_RATE, lambda v: f"{v:.2f}")
     axes[2].set_title(L("③ 정책금리 (한국은행 기준금리)", "3) Policy rate (BOK base rate)"),
@@ -142,15 +142,23 @@ def fig_three_panels(wage, wmode, apt, amode, rate, rmode):
 
 def fig_indexed(wage, wmode, apt, amode):
     fig, ax = plt.subplots(figsize=(10, 6))
-    wi = wage.assign(v=wage["v"] / wage["v"].iloc[0] * 100)
-    ai = apt.assign(v=apt["v"] / apt["v"].iloc[0] * 100)
-    base = int(min(wage["t"].iloc[0], apt["t"].iloc[0]))
-    ax.set_title(L(f"임금 vs 서울 아파트값 — {base}년=100 지수 비교",
+    # 공통 기준시점 = 두 계열 모두 값이 있는 첫 시점(월별 임금이 2020~라 대개 2020.01).
+    # 서로 다른 시점을 100으로 잡으면 비교가 왜곡되므로 공통 기준월=100으로 맞춘다.
+    base_t = max(wage["t"].iloc[0], apt["t"].iloc[0])
+
+    def _rebase(s):
+        b = s.loc[s["t"] >= base_t - 1e-9, "v"].iloc[0]
+        return s.assign(v=s["v"] / b * 100)
+
+    wi, ai = _rebase(wage), _rebase(apt)
+    by, bm = int(base_t), round((base_t - int(base_t)) * 12) + 1
+    base = f"{by}.{bm:02d}"
+    ax.set_title(L(f"임금 vs 서울 아파트값 — {base}=100 지수 비교",
                    f"Wage vs Seoul apt. — indexed to {base}=100"),
                  fontsize=14, fontweight="bold", color=INK, loc="left", pad=12)
     for s, mode, color, ko, en in [
         (wi, wmode, C_WAGE, "시간당 명목임금", "Hourly wage"),
-        (ai, amode, C_APT, "서울 아파트 실거래가", "Seoul apt. price"),
+        (ai, amode, C_APT, "서울 아파트 실거래가격지수", "Seoul apt. price index"),
     ]:
         marker = "" if mode == "monthly" else "o"
         ax.plot(s["t"], s["v"], color=color, linewidth=2.4, marker=marker,
