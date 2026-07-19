@@ -1,0 +1,25 @@
+# 시간당 명목임금 (전체근로자 1인당 시간당 임금총액), 단위: 원/시간, 매년 6월 기준
+# 출처: 고용노동부 고용형태별근로실태조사 / 사업체노동력조사 (KOSIS DT_118N_LCE0001, DT_118N_MON051)
+# reliability: official = 공식 발표 수치(2018~), estimate = 확인 앵커 기반 후방외삽(2005~2017, 오차 ±10~15% 가능)
+# 참고: 2020년 표준산업분류 개편으로 2019년 이전과 계열 단절 있음(2020 값 하락은 분류 개편 영향 포함).
+year,hourly_wage_won,reliability
+2005,9300,estimate
+2006,9900,estimate
+2007,10500,estimate
+2008,11100,estimate
+2009,11700,estimate
+2010,12500,estimate
+2011,13300,estimate
+2012,14100,estimate
+2013,14900,estimate
+2014,15700,estimate
+2015,16600,estimate
+2016,17500,estimate
+2017,18500,estimate
+2018,19522,official
+2019,20573,official
+2020,19316,official
+2021,19806,official
+2022,22651,official
+2023,22878,official
+2024,25156,official

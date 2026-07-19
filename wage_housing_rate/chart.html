@@ -1,0 +1,423 @@
+<title>임금 · 서울 아파트값 · 정책금리 (2005–2024)</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:      #f2f3f1;
+    --surface:   #fcfcfb;
+    --ink:       #16191c;
+    --ink-2:     #545a61;
+    --muted:     #8b9098;
+    --grid:      #e5e7e2;
+    --axis:      #c7cabf;
+    --hairline:  rgba(20,25,30,0.10);
+    --wage:      #2a78d6;
+    --apt:       #eb6834;
+    --rate:      #17872f;
+    --shadow:    0 1px 2px rgba(20,25,30,.05), 0 8px 28px rgba(20,25,30,.06);
+    --font: system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo",
+            "Malgun Gothic", "Noto Sans KR", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --page:      #0e0f10;
+      --surface:   #17191b;
+      --ink:       #f2f4f1;
+      --ink-2:     #b7bcc2;
+      --muted:     #858a90;
+      --grid:      #292c2e;
+      --axis:      #3a3e40;
+      --hairline:  rgba(255,255,255,0.10);
+      --wage:      #4a94ec;
+      --apt:       #f2793f;
+      --rate:      #35b45f;
+      --shadow:    0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:#0e0f10; --surface:#17191b; --ink:#f2f4f1; --ink-2:#b7bcc2;
+    --muted:#858a90; --grid:#292c2e; --axis:#3a3e40; --hairline:rgba(255,255,255,0.10);
+    --wage:#4a94ec; --apt:#f2793f; --rate:#35b45f;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page); color: var(--ink);
+    font-family: var(--font); line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: clamp(20px, 4vw, 56px) clamp(16px, 4vw, 40px) 72px; }
+
+  header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+  .eyebrow {
+    font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; margin: 0 0 10px;
+  }
+  h1 {
+    font-size: clamp(26px, 4.4vw, 40px); line-height: 1.12; margin: 0 0 12px;
+    letter-spacing: -0.02em; text-wrap: balance; font-weight: 700;
+  }
+  .lede { font-size: clamp(15px, 1.7vw, 17px); color: var(--ink-2); max-width: 60ch; margin: 0; }
+
+  .theme-btn {
+    flex: none; background: var(--surface); color: var(--ink-2);
+    border: 1px solid var(--hairline); border-radius: 999px;
+    padding: 8px 14px; font: inherit; font-size: 13px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px; box-shadow: var(--shadow);
+  }
+  .theme-btn:hover { color: var(--ink); }
+  .theme-btn:focus-visible { outline: 2px solid var(--wage); outline-offset: 2px; }
+
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 30px 0 8px; }
+  @media (max-width: 620px) { .kpis { grid-template-columns: 1fr; } }
+  .kpi {
+    background: var(--surface); border: 1px solid var(--hairline);
+    border-radius: 14px; padding: 18px 18px 16px; box-shadow: var(--shadow);
+  }
+  .kpi .lab { font-size: 12.5px; color: var(--muted); font-weight: 600; margin: 0 0 8px;
+              display: flex; align-items: center; gap: 8px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .kpi .val { font-size: 30px; font-weight: 700; letter-spacing: -0.02em;
+              font-variant-numeric: tabular-nums; line-height: 1; }
+  .kpi .sub { font-size: 13px; color: var(--ink-2); margin: 8px 0 0; }
+  .up { color: var(--apt); } .up::before { content: "▲ "; font-size: .8em; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--hairline);
+    border-radius: 16px; padding: 22px clamp(14px,2.4vw,26px) 18px; box-shadow: var(--shadow);
+    margin-top: 22px;
+  }
+  .card h2 { font-size: 18px; margin: 0 0 3px; letter-spacing: -0.01em; }
+  .card .note { font-size: 13px; color: var(--muted); margin: 0 0 14px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin: 2px 0 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; color: var(--ink-2); }
+  .legend i { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
+
+  .chart-host { position: relative; width: 100%; }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .gridline { stroke: var(--grid); stroke-width: 1; }
+  .axisline { stroke: var(--axis); stroke-width: 1; }
+  .tick { fill: var(--muted); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+  .yLabel { fill: var(--muted); font-size: 11.5px; }
+  .series-line { fill: none; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
+  .series-dot { stroke: var(--surface); stroke-width: 1.5; }
+  .end-label { font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .panels { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 22px; }
+  @media (max-width: 820px) { .panels { grid-template-columns: 1fr; } }
+  .panels .card { margin-top: 0; }
+
+  .crosshair { stroke: var(--axis); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0; }
+  .hover-dot { opacity: 0; }
+  .tooltip {
+    position: absolute; pointer-events: none; opacity: 0; transform: translate(-50%, -120%);
+    background: var(--ink); color: var(--surface); border-radius: 9px; padding: 8px 11px;
+    font-size: 12.5px; line-height: 1.5; white-space: nowrap; box-shadow: var(--shadow);
+    z-index: 5; transition: opacity .08s;
+  }
+  .tooltip b { font-variant-numeric: tabular-nums; }
+  .tooltip .ttyear { font-weight: 700; margin-bottom: 3px; display: block; }
+  .tooltip .ttrow { display: flex; align-items: center; gap: 7px; }
+  .tooltip .ttrow i { width: 8px; height: 8px; border-radius: 50%; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .table-scroll { overflow-x: auto; margin-top: 6px; }
+  th, td { padding: 7px 10px; text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--hairline); }
+  tbody tr:nth-child(even) { background: color-mix(in srgb, var(--ink) 3%, transparent); }
+  .est { color: var(--muted); }
+  .est::after { content: " ·추정"; font-size: 10px; }
+
+  details { margin-top: 22px; }
+  summary { cursor: pointer; font-weight: 600; font-size: 15px; padding: 6px 0; }
+  summary:focus-visible { outline: 2px solid var(--wage); outline-offset: 3px; border-radius: 4px; }
+  .prose { font-size: 14px; color: var(--ink-2); max-width: 72ch; }
+  .prose h3 { color: var(--ink); font-size: 14px; margin: 16px 0 4px; }
+  .prose ul { margin: 4px 0 10px; padding-left: 18px; }
+  .prose li { margin: 3px 0; }
+  .prose a { color: var(--wage); }
+  footer { margin-top: 40px; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--hairline); padding-top: 16px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow">2005 — 2024 · 최근 20년</p>
+      <h1>시간당 임금 · 서울 아파트 실거래가 · 정책금리</h1>
+      <p class="lede">같은 20년을 세 개의 선으로. 임금은 꾸준히 올랐지만, 서울 아파트값은
+        2015년 이후 임금을 앞질러 벌어졌고, 그 사이 정책금리는 두 번의 저금리기와 급등을 오갔습니다.</p>
+    </div>
+    <button class="theme-btn" id="themeBtn" aria-label="테마 전환">
+      <span id="themeIcon">◐</span><span id="themeTxt">테마</span>
+    </button>
+  </header>
+
+  <div class="kpis" id="kpis"></div>
+
+  <section class="card">
+    <h2>임금 vs 서울 아파트값 — 2005년 = 100 지수 비교</h2>
+    <p class="note">단위가 다른 두 지표를 같은 출발선(2005년=100)에 놓고 상대 상승폭을 비교</p>
+    <div class="legend">
+      <span><i style="background:var(--wage)"></i>시간당 명목임금</span>
+      <span><i style="background:var(--apt)"></i>서울 아파트 실거래가</span>
+    </div>
+    <div class="chart-host" id="heroHost"></div>
+  </section>
+
+  <div class="panels" id="panels"></div>
+
+  <details>
+    <summary>데이터 표 보기</summary>
+    <div class="card" style="margin-top:12px">
+      <div class="table-scroll"><table id="dataTable"></table></div>
+    </div>
+  </details>
+
+  <details>
+    <summary>방법론 · 데이터 출처 · 한계</summary>
+    <div class="card prose" style="margin-top:12px">
+      <h3>지표 정의</h3>
+      <ul>
+        <li><b>시간당 명목임금</b> — 고용노동부 고용형태별근로실태조사·사업체노동력조사의
+          전체근로자 1인당 <b>시간당 임금총액</b>(원/시간, 매년 6월 기준).</li>
+        <li><b>서울 아파트 실거래가</b> — KB부동산 서울 아파트 <b>평균 매매가격</b>(억 원, 연말 기준).
+          직관적 가격 수준을 보여주며, 표에는 한국부동산원 <b>실거래가격지수</b>(2021≈100)도 함께 수록.</li>
+        <li><b>정책금리</b> — 한국은행 <b>기준금리</b>(%, 연말 12월 기준).</li>
+      </ul>
+      <h3>중요 한계</h3>
+      <ul>
+        <li>이 차트를 생성한 환경에서는 한국 통계포털(KOSIS·ECOS·한국부동산원) 직접 접속이
+          차단되어 <b>원자료 표를 직접 내려받지 못했습니다.</b> 값은 공개·보도로 확인된 앵커 수치와
+          공식 변동률로 재구성했습니다.</li>
+        <li>임금은 <b>2018년 이후 공식 수치</b>, 2005–2017년은 앵커 기반 후방외삽 <b>추정치</b>(표에 ·추정 표시).
+          2020년 표준산업분류 개편으로 2019년 이전과 계열 단절이 있어 2020년 값 하락에는 분류 개편 영향이 섞여 있습니다.</li>
+        <li>KB 평균 매매가격은 감정시세 평균이라 엄밀한 '실거래'가 아니며, 실거래가 흐름의 근사치입니다.</li>
+        <li>정확한 공식 수치는 KOSIS DT_118N_LCE0001(임금), DT_KAB_11672_S1(아파트 실거래가격지수),
+          ECOS 722Y001(기준금리)에서 API 키로 직접 갱신할 수 있습니다(리포지토리의 <code>src/fetch_live.py</code>).</li>
+      </ul>
+      <h3>출처</h3>
+      <ul>
+        <li>고용노동부 / KOSIS 고용형태별·산업규모별 임금 및 근로시간</li>
+        <li>KB부동산 주택가격동향 · 한국부동산원 공동주택 실거래가격지수</li>
+        <li>한국은행 기준금리 결정 이력</li>
+      </ul>
+    </div>
+  </details>
+
+  <footer>최근 20년(2005–2024) 세 지표 라인 차트 · 값은 확인 앵커+공식 변동률 기반 재구성(일부 추정 포함) · 인과 아닌 추세 비교용</footer>
+</div>
+
+<script>
+const YEARS = [2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024];
+const WAGE  = [9300,9900,10500,11100,11700,12500,13300,14100,14900,15700,16600,17500,18500,19522,20573,19316,19806,22651,22878,25156];
+const APT   = [4.0,4.6,4.9,4.9,5.0,4.8,4.8,4.7,4.8,5.1,5.6,5.9,6.7,8.1,8.6,10.6,12.3,12.6,11.9,12.1];
+const RATE  = [3.75,4.50,5.00,3.00,2.00,2.50,3.25,2.75,2.50,2.00,1.50,1.25,1.50,1.75,1.25,0.50,1.00,3.25,3.50,3.00];
+const APT_INDEX = [null,48,50,48,53,52,53,50,49,51,56,60,65,73,76,86,100,78,86,92]; // 한국부동산원 실거래가격지수
+// official-from-year flags
+const WAGE_OFFICIAL_FROM = 2018;
+const APT_CONFIRMED = {2018:1,2019:1,2020:1,2021:1,2023:1,2024:1};
+
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function idx100(a){ const b=a[0]; return a.map(function(v){return v/b*100;}); }
+const WAGE_IDX = idx100(WAGE);
+const APT_IDX  = idx100(APT);
+
+// ---------- generic SVG line chart (pixel viewBox, uniform scaling) ----------
+function makeChart(host, opts){
+  // opts: { series:[{values,color,name}], yFmt, valFmt, tipFmt, height, yTicks, compact }
+  const W = opts.compact ? 380 : 760, H = opts.height || 300;
+  const padL = opts.compact ? 38 : 56, padR = opts.compact ? 26 : 52, padT = 14, padB = 26;
+  const n = YEARS.length;
+  const allVals = opts.series.reduce(function(acc,s){ return acc.concat(s.values.filter(function(v){return v!=null;})); }, []);
+  let ymin = Math.min.apply(null, allVals), ymax = Math.max.apply(null, allVals);
+  if (opts.yMin != null) ymin = opts.yMin;
+  const span = ymax - ymin || 1;
+  ymin -= span*0.10; ymax += span*0.10;
+  const x = function(i){ return padL + (W-padL-padR) * (i/(n-1)); };
+  const y = function(v){ return padT + (H-padT-padB) * (1-(v-ymin)/(ymax-ymin)); };
+
+  const NS="http://www.w3.org/2000/svg";
+  const svg=document.createElementNS(NS,"svg");
+  svg.setAttribute("viewBox","0 0 "+W+" "+H);
+  svg.style.aspectRatio = W+" / "+H;
+  function el(t,a){ const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); return e; }
+
+  // y gridlines + ticks
+  const ticks = niceTicks(ymin, ymax, opts.yTicks||4);
+  ticks.forEach(function(t){
+    if (t < ymin || t > ymax) return;
+    svg.appendChild(el("line",{class:"gridline",x1:padL,x2:W-padR,y1:y(t),y2:y(t)}));
+    const tx=el("text",{class:"tick",x:padL-8,y:y(t)+4,"text-anchor":"end"});
+    tx.textContent=opts.yFmt(t);
+    svg.appendChild(tx);
+  });
+  // x ticks (every 3 yrs + last)
+  YEARS.forEach(function(yr,i){
+    if (i%3!==0) return;
+    const tx=el("text",{class:"tick",x:x(i),y:H-8,"text-anchor":"middle"});
+    tx.textContent="’"+String(yr).slice(2);
+    svg.appendChild(tx);
+  });
+
+  // series
+  opts.series.forEach(function(s){
+    let d="", started=false;
+    s.values.forEach(function(v,i){
+      if (v==null){ started=false; return; }
+      d += (started?" L":"M")+x(i)+" "+y(v); started=true;
+    });
+    svg.appendChild(el("path",{class:"series-line",d:d,stroke:s.color}));
+    const li=lastIdx(s.values);
+    if (li>=0){
+      svg.appendChild(el("circle",{class:"series-dot",cx:x(li),cy:y(s.values[li]),r:3.4,fill:s.color}));
+      const lb=el("text",{class:"end-label",x:x(li)+7,y:y(s.values[li])+4,fill:s.color});
+      lb.textContent=opts.valFmt(s.values[li]);
+      svg.appendChild(lb);
+    }
+  });
+
+  // hover layer
+  const cross=el("line",{class:"crosshair",y1:padT,y2:H-padB});
+  svg.appendChild(cross);
+  const hoverDots=opts.series.map(function(s){
+    const c=el("circle",{class:"hover-dot",r:4,fill:s.color,stroke:"var(--surface)","stroke-width":1.6});
+    svg.appendChild(c); return c;
+  });
+  const overlay=el("rect",{x:0,y:0,width:W,height:H,fill:"transparent",style:"cursor:crosshair"});
+  svg.appendChild(overlay);
+
+  const tip=document.createElement("div"); tip.className="tooltip"; host.appendChild(tip);
+
+  function move(ev){
+    const r=svg.getBoundingClientRect();
+    const px=(ev.clientX-r.left)/r.width*W;
+    let i=Math.round((px-padL)/((W-padL-padR)/(n-1)));
+    i=Math.max(0,Math.min(n-1,i));
+    cross.setAttribute("x1",x(i)); cross.setAttribute("x2",x(i)); cross.style.opacity=1;
+    let rows="";
+    opts.series.forEach(function(s,k){
+      const v=s.values[i];
+      if (v==null){ hoverDots[k].style.opacity=0; return; }
+      hoverDots[k].setAttribute("cx",x(i)); hoverDots[k].setAttribute("cy",y(v)); hoverDots[k].style.opacity=1;
+      rows+='<div class="ttrow"><i style="background:'+s.color+'"></i>'+
+            (s.name?s.name+" ":"")+'<b>'+opts.tipFmt(v)+'</b></div>';
+    });
+    tip.innerHTML='<span class="ttyear">'+YEARS[i]+'년</span>'+rows;
+    tip.style.left=(x(i)/W*r.width)+"px";
+    tip.style.top=(padT/H*r.height)+"px";
+    tip.style.opacity=1;
+  }
+  overlay.addEventListener("mousemove",move);
+  overlay.addEventListener("mouseleave",function(){
+    tip.style.opacity=0; cross.style.opacity=0; hoverDots.forEach(function(d){d.style.opacity=0;});
+  });
+  overlay.addEventListener("touchstart",function(e){ move(e.touches[0]); },{passive:true});
+  overlay.addEventListener("touchmove",function(e){ move(e.touches[0]); },{passive:true});
+
+  host.insertBefore(svg, tip);
+}
+
+function lastIdx(a){ for(let i=a.length-1;i>=0;i--) if(a[i]!=null) return i; return -1; }
+function niceTicks(min,max,count){
+  const raw=(max-min)/count; const mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const norm=raw/mag; let step; if(norm<1.5)step=1; else if(norm<3)step=2; else if(norm<7)step=5; else step=10;
+  step*=mag; const start=Math.ceil(min/step)*step; const out=[];
+  for(let v=start; v<=max+1e-9; v+=step) out.push(Math.round(v/step)*step);
+  return out;
+}
+const won=function(v){return Math.round(v).toLocaleString();};
+const eok=function(v){return v.toFixed(1);};
+const pct=function(v){return (v%1===0?v.toFixed(0):v.toFixed(2))+"";};
+
+// ---------- render KPIs ----------
+function pctChange(a){ return Math.round((a[a.length-1]/a[0]-1)*100); }
+document.getElementById("kpis").innerHTML =
+ kpiCard("var(--wage)","시간당 명목임금","25,156원",
+   "2005년 대비 <b>"+pctChange(WAGE)+"%</b> ↑ · 지수 "+Math.round(WAGE_IDX[19])) +
+ kpiCard("var(--apt)","서울 아파트 평균가","12.1억원",
+   '<span class="up">'+pctChange(APT)+"%</span> · 지수 "+Math.round(APT_IDX[19])+" (임금 앞질러 상승)") +
+ kpiCard("var(--rate)","정책금리(기준금리)","3.00%",
+   "20년 저점 0.50%(2020) ~ 고점 5.00%(2007)");
+function kpiCard(color,lab,val,sub){
+  return '<div class="kpi"><p class="lab"><span class="dot" style="background:'+color+'"></span>'+lab+
+    '</p><div class="val">'+val+'</div><p class="sub">'+sub+'</p></div>';
+}
+
+// ---------- hero: indexed comparison ----------
+makeChart(document.getElementById("heroHost"), {
+  height: 300,
+  series:[
+    {values:WAGE_IDX, color:cssVar("--wage")||"#2a78d6", name:"임금"},
+    {values:APT_IDX,  color:cssVar("--apt")||"#eb6834", name:"아파트"}
+  ],
+  yFmt:function(v){return Math.round(v);}, valFmt:function(v){return Math.round(v);},
+  tipFmt:function(v){return Math.round(v);}, yTicks:4
+});
+
+// ---------- 3 small-multiple panels ----------
+const panelDefs=[
+  {t:"① 시간당 명목임금", u:"원/시간", vals:WAGE, color:"--wage", yFmt:function(v){return (v/1000).toFixed(0)+"천";}, valFmt:won, tipFmt:function(v){return won(v)+"원";}},
+  {t:"② 서울 아파트 평균 실거래가", u:"억 원", vals:APT, color:"--apt", yFmt:function(v){return v.toFixed(0);}, valFmt:eok, tipFmt:function(v){return v.toFixed(1)+"억";}},
+  {t:"③ 정책금리 (기준금리)", u:"%", vals:RATE, color:"--rate", yFmt:function(v){return v.toFixed(0);}, valFmt:function(v){return v.toFixed(2);}, tipFmt:function(v){return v.toFixed(2)+"%";}}
+];
+const panelsEl=document.getElementById("panels");
+panelDefs.forEach(function(p){
+  const card=document.createElement("section"); card.className="card";
+  card.innerHTML='<h2 style="font-size:15px">'+p.t+'</h2><p class="note">'+p.u+'</p>';
+  const host=document.createElement("div"); host.className="chart-host"; card.appendChild(host);
+  panelsEl.appendChild(card);
+  makeChart(host,{ height:250, compact:true,
+    series:[{values:p.vals, color:cssVar(p.color)}],
+    yFmt:p.yFmt, valFmt:p.valFmt, tipFmt:p.tipFmt, yTicks:4 });
+});
+
+// ---------- data table ----------
+(function(){
+  let h='<thead><tr><th>연도</th><th>시간당임금(원)</th><th>서울아파트(억)</th><th>실거래가지수</th><th>기준금리(%)</th></tr></thead><tbody>';
+  YEARS.forEach(function(yr,i){
+    const wEst = yr<WAGE_OFFICIAL_FROM ? ' class="est"' : '';
+    const aEst = APT_CONFIRMED[yr] ? '' : ' class="est"';
+    h+='<tr><td>'+yr+'</td>'+
+       '<td'+wEst+'>'+WAGE[i].toLocaleString()+'</td>'+
+       '<td'+aEst+'>'+APT[i].toFixed(1)+'</td>'+
+       '<td class="est">'+(APT_INDEX[i]==null?'—':APT_INDEX[i])+'</td>'+
+       '<td>'+RATE[i].toFixed(2)+'</td></tr>';
+  });
+  document.getElementById("dataTable").innerHTML=h+'</tbody>';
+})();
+
+// ---------- theme toggle ----------
+(function(){
+  const btn=document.getElementById("themeBtn");
+  function cur(){ const a=document.documentElement.getAttribute("data-theme");
+    if(a) return a; return matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"; }
+  function apply(t){ document.documentElement.setAttribute("data-theme",t);
+    document.getElementById("themeIcon").textContent = t==="dark"?"☀":"☾";
+    document.getElementById("themeTxt").textContent = t==="dark"?"라이트":"다크";
+    // recolor existing charts by re-rendering
+    location._t=t;
+  }
+  apply(cur());
+  btn.addEventListener("click",function(){ apply(cur()==="dark"?"light":"dark"); rerender(); });
+})();
+function rerender(){
+  ["heroHost"].forEach(function(id){ const h=document.getElementById(id); h.innerHTML=""; });
+  document.getElementById("panels").innerHTML="";
+  makeChart(document.getElementById("heroHost"), {
+    height:300,
+    series:[{values:WAGE_IDX,color:cssVar("--wage"),name:"임금"},{values:APT_IDX,color:cssVar("--apt"),name:"아파트"}],
+    yFmt:function(v){return Math.round(v);}, valFmt:function(v){return Math.round(v);}, tipFmt:function(v){return Math.round(v);}, yTicks:4
+  });
+  panelDefs.forEach(function(p){
+    const card=document.createElement("section"); card.className="card";
+    card.innerHTML='<h2 style="font-size:15px">'+p.t+'</h2><p class="note">'+p.u+'</p>';
+    const host=document.createElement("div"); host.className="chart-host"; card.appendChild(host);
+    document.getElementById("panels").appendChild(card);
+    makeChart(host,{height:250,compact:true,series:[{values:p.vals,color:cssVar(p.color)}],yFmt:p.yFmt,valFmt:p.valFmt,tipFmt:p.tipFmt,yTicks:4});
+  });
+}
+</script>

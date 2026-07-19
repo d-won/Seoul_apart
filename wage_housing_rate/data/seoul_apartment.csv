@@ -1,0 +1,27 @@
+# 서울 아파트 실거래가 흐름 — 평균 매매가격, 단위: 억 원
+# 출처: KB부동산 서울 아파트 평균 매매가격 (연말 기준). 확인 앵커:
+#   2018.10 8억 돌파 / 2019.09 8.41억 / 2020.09 10.03억(첫 10억) / 2025.07 14.06억
+# 주의: KB 평균가는 감정시세 기반 평균이라 '실거래' 자체는 아니며 실거래가 흐름의 근사치.
+#   엄밀한 '실거래' 지표는 한국부동산원 실거래가격지수(2021.06=100) → seoul_apt_price_index 열 참고.
+# reliability: confirmed = 보도/공식 앵커 확인, estimate = 앵커 사이 추세 보간(±0.3~0.5억)
+year,seoul_apt_avg_price_100m,seoul_apt_price_index,reliability
+2005,4.0,,estimate
+2006,4.6,48,estimate
+2007,4.9,50,estimate
+2008,4.9,48,estimate
+2009,5.0,53,estimate
+2010,4.8,52,estimate
+2011,4.8,53,estimate
+2012,4.7,50,estimate
+2013,4.8,49,estimate
+2014,5.1,51,estimate
+2015,5.6,56,estimate
+2016,5.9,60,estimate
+2017,6.7,65,estimate
+2018,8.1,73,confirmed
+2019,8.6,76,confirmed
+2020,10.6,86,confirmed
+2021,12.3,100,confirmed
+2022,12.6,78,estimate
+2023,11.9,86,confirmed
+2024,12.1,92,confirmed
