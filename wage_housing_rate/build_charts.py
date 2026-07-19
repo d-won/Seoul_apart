@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
-"""최근 20여 년(2005~2025) 세 지표 라인 차트 생성.
+"""임금 · 서울 아파트 실거래가 · 정책금리 라인 차트 생성.
 
   1) 시간당 명목임금 (원/시간)
-  2) 서울 아파트 실거래가 (한국부동산원 실거래가격지수 및 평균 실거래가)
-  3) 정책금리 = 한국은행 기준금리 (%, 연말 기준)
+  2) 서울 아파트 실거래가 (평균 실거래가 / 실거래가격지수)
+  3) 정책금리 = 한국은행 기준금리 (%)
 
-세 지표는 단위가 완전히 다르므로 하나의 y축에 겹치지 않는다(이중 축 금지).
+단위가 완전히 다르므로 하나의 y축에 겹치지 않는다(이중 축 금지).
   - fig1: 3단 패널(스몰 멀티플) — 각 지표를 고유 단위로 표시
-  - fig2: 임금 vs 아파트값을 2005=100 으로 지수화한 비교(둘 다 '가격'이라 비교 가능)
+  - fig2: 임금 vs 아파트값을 지수화(첫 시점=100)한 비교
+
+월별/연간 자동 감지:
+  data/<name>_monthly.csv (month='YYYY-MM' 열) 가 있으면 **실측 월별**로 그리고,
+  없으면 data/<name>.csv (year 열) 의 연간값으로 그린다.
+  → 통계포털에서 월별을 받아 *_monthly.csv 로 저장하면 자동으로 월별 차트가 된다.
 
 실행:  python build_charts.py
 결과:  outputs/three_indicators.png , outputs/wage_vs_apartment_index.png
@@ -26,7 +31,6 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data")
 OUT = os.path.join(HERE, "outputs")
 
-# 팔레트 (dataviz 기준 색)
 C_WAGE = "#2a78d6"   # blue
 C_APT = "#eb6834"    # orange
 C_RATE = "#008300"   # green
@@ -36,7 +40,6 @@ GRID = "#e1e0d9"
 
 
 def _setup_korean_font() -> bool:
-    """시스템에 한글 폰트가 있으면 사용, 없으면 영문 라벨 폴백."""
     candidates = ["NanumGothic", "Malgun Gothic", "AppleGothic",
                   "Noto Sans CJK KR", "Noto Sans KR", "UnDotum"]
     available = {f.name for f in fm.fontManager.ttflist}
@@ -53,24 +56,23 @@ KO = _setup_korean_font()
 
 
 def L(ko: str, en: str) -> str:
-    """한글 폰트가 있으면 한글, 없으면 영문 라벨."""
     return ko if KO else en
 
 
-def load() -> pd.DataFrame:
-    wage = pd.read_csv(os.path.join(DATA, "hourly_wage.csv"), comment="#")
-    apt = pd.read_csv(os.path.join(DATA, "seoul_apartment.csv"), comment="#")
-    rate = pd.read_csv(os.path.join(DATA, "base_rate.csv"), comment="#")
-    df = wage.merge(apt, on="year").merge(rate, on="year")
-    return df.sort_values("year").reset_index(drop=True)
+def get_series(monthly_name: str, annual_name: str, valcol: str):
+    """월별 파일이 있으면 (t, v, 'monthly'), 없으면 연간 (t, v, 'annual').
 
-
-def load_rate_monthly() -> pd.DataFrame:
-    """기준금리 월별(월말 유효금리). month='YYYY-MM' → t(소수 연도)."""
-    m = pd.read_csv(os.path.join(DATA, "base_rate_monthly.csv"), comment="#")
-    ym = m["month"].str.split("-", expand=True).astype(int)
-    m["t"] = ym[0] + (ym[1] - 1) / 12.0
-    return m.sort_values("t").reset_index(drop=True)
+    t = 소수 연도(2020.0 = 2020-01). 반환: DataFrame[t, v], mode 문자열.
+    """
+    mpath = os.path.join(DATA, monthly_name)
+    if os.path.exists(mpath):
+        m = pd.read_csv(mpath, comment="#")
+        ym = m["month"].str.split("-", expand=True).astype(int)
+        m = m.assign(t=ym[0] + (ym[1] - 1) / 12.0, v=m[valcol])
+        return m[["t", "v"]].dropna().sort_values("t").reset_index(drop=True), "monthly"
+    a = pd.read_csv(os.path.join(DATA, annual_name), comment="#")
+    a = a.assign(t=a["year"].astype(float), v=a[valcol])
+    return a[["t", "v"]].dropna().sort_values("t").reset_index(drop=True), "annual"
 
 
 def _style_axis(ax):
@@ -82,48 +84,55 @@ def _style_axis(ax):
     ax.tick_params(colors=MUTED, labelsize=9)
 
 
-def fig_three_panels(df: pd.DataFrame, rate_m: pd.DataFrame):
+def _plot_series(ax, s, mode, color, endfmt):
+    if mode == "monthly":
+        # 금리는 계단, 그 외 월별은 실선(마커 없음 — 점이 너무 많음)
+        style = "steps-post" if color == C_RATE else "default"
+        ax.plot(s["t"], s["v"], color=color, linewidth=1.6, drawstyle=style, zorder=3)
+    else:
+        ax.plot(s["t"], s["v"], color=color, linewidth=2.2, marker="o",
+                markersize=4, zorder=3)
+    yv = s["v"].iloc[-1]
+    ax.annotate(endfmt(yv), xy=(s["t"].iloc[-1], yv), xytext=(6, 0),
+                textcoords="offset points", va="center", fontsize=9,
+                color=color, fontweight="bold")
+
+
+def _xticks(ax, tmin, tmax):
+    lo, hi = int(tmin), int(tmax) + 1
+    step = 3 if (hi - lo) > 12 else 2
+    ax.set_xticks(list(range(lo - lo % step, hi + 1, step)))
+
+
+def fig_three_panels(wage, wmode, apt, amode, rate, rmode):
     fig, axes = plt.subplots(3, 1, figsize=(10, 11), sharex=True)
-    fig.suptitle(L("세 지표 추이 (2005–2025 · 금리는 월별 2026.07까지)",
-                   "Three indicators, 2005–2025 (rate monthly to 2026.07)"),
-                 fontsize=15, fontweight="bold", color=INK, y=0.98)
+    tags = {"monthly": L("월별", "monthly"), "annual": L("연간", "annual")}
+    fig.suptitle(L("세 지표 추이 — 임금·아파트 %s / 금리 %s"
+                   % (tags[wmode], tags[rmode]),
+                   "Three indicators — wage/apt %s / rate %s" % (wmode, rmode)),
+                 fontsize=14, fontweight="bold", color=INK, y=0.98)
 
-    # ① 임금 · ② 아파트 — 연간
-    for ax, series, color, title, ylab, fmt in [
-        (axes[0], df["hourly_wage_won"], C_WAGE,
-         L("① 시간당 명목임금", "1) Hourly nominal wage"),
-         L("원 / 시간", "KRW / hour"), "{:,.0f}"),
-        (axes[1], df["seoul_apt_avg_price_100m"], C_APT,
-         L("② 서울 아파트 평균 실거래가", "2) Seoul apt. avg. transaction price"),
-         L("억 원", "100M KRW"), "{:,.1f}"),
-    ]:
-        ax.plot(df["year"], series, color=color, linewidth=2.2,
-                marker="o", markersize=4, zorder=3)
-        ax.set_title(title, fontsize=12, color=INK, loc="left", pad=8)
-        ax.set_ylabel(ylab, fontsize=10, color=MUTED)
+    _plot_series(axes[0], wage, wmode, C_WAGE, lambda v: f"{v:,.0f}")
+    axes[0].set_title(L("① 시간당 명목임금", "1) Hourly nominal wage"),
+                      fontsize=12, color=INK, loc="left", pad=8)
+    axes[0].set_ylabel(L("원 / 시간", "KRW / hour"), fontsize=10, color=MUTED)
+
+    _plot_series(axes[1], apt, amode, C_APT, lambda v: f"{v:,.1f}")
+    axes[1].set_title(L("② 서울 아파트 실거래가", "2) Seoul apt. transaction price"),
+                      fontsize=12, color=INK, loc="left", pad=8)
+    axes[1].set_ylabel(L("억 원", "100M KRW"), fontsize=10, color=MUTED)
+
+    _plot_series(axes[2], rate, rmode, C_RATE, lambda v: f"{v:.2f}")
+    axes[2].set_title(L("③ 정책금리 (한국은행 기준금리)", "3) Policy rate (BOK base rate)"),
+                      fontsize=12, color=INK, loc="left", pad=8)
+    axes[2].set_ylabel(L("%", "%"), fontsize=10, color=MUTED)
+
+    for ax in axes:
         _style_axis(ax)
-        ax.annotate(fmt.format(series.iloc[-1]),
-                    xy=(df["year"].iloc[-1], series.iloc[-1]),
-                    xytext=(6, 0), textcoords="offset points",
-                    va="center", fontsize=9, color=color, fontweight="bold")
-
-    # ③ 정책금리 — 월별(실제)
-    ax = axes[2]
-    ax.plot(rate_m["t"], rate_m["base_rate_pct"], color=C_RATE, linewidth=1.8,
-            drawstyle="steps-post", zorder=3)
-    ax.set_title(L("③ 정책금리 (한국은행 기준금리, 월별)",
-                   "3) Policy rate (BOK base rate, monthly)"),
-                 fontsize=12, color=INK, loc="left", pad=8)
-    ax.set_ylabel(L("%", "%"), fontsize=10, color=MUTED)
-    _style_axis(ax)
-    rv = rate_m["base_rate_pct"].iloc[-1]
-    ax.annotate(f"{rv:.2f}",
-                xy=(rate_m["t"].iloc[-1], rv),
-                xytext=(6, 0), textcoords="offset points",
-                va="center", fontsize=9, color=C_RATE, fontweight="bold")
-
+    tmin = min(wage["t"].min(), apt["t"].min(), rate["t"].min())
+    tmax = max(wage["t"].max(), apt["t"].max(), rate["t"].max())
+    _xticks(axes[-1], tmin, tmax)
     axes[-1].set_xlabel(L("연도", "Year"), fontsize=10, color=MUTED)
-    axes[-1].set_xticks(list(range(2005, 2027, 3)))
     fig.tight_layout(rect=(0, 0, 1, 0.97))
     path = os.path.join(OUT, "three_indicators.png")
     fig.savefig(path, dpi=150, facecolor="#fcfcfb")
@@ -131,32 +140,30 @@ def fig_three_panels(df: pd.DataFrame, rate_m: pd.DataFrame):
     return path
 
 
-def fig_indexed(df: pd.DataFrame):
-    base_year = df["year"].iloc[0]
-    wage_idx = df["hourly_wage_won"] / df["hourly_wage_won"].iloc[0] * 100
-    apt_idx = df["seoul_apt_avg_price_100m"] / df["seoul_apt_avg_price_100m"].iloc[0] * 100
-
+def fig_indexed(wage, wmode, apt, amode):
     fig, ax = plt.subplots(figsize=(10, 6))
-    ax.set_title(L(f"임금 vs 서울 아파트값 — {base_year}년=100 지수 비교",
-                   f"Wage vs Seoul apt. — indexed to {base_year}=100"),
+    wi = wage.assign(v=wage["v"] / wage["v"].iloc[0] * 100)
+    ai = apt.assign(v=apt["v"] / apt["v"].iloc[0] * 100)
+    base = int(min(wage["t"].iloc[0], apt["t"].iloc[0]))
+    ax.set_title(L(f"임금 vs 서울 아파트값 — {base}년=100 지수 비교",
+                   f"Wage vs Seoul apt. — indexed to {base}=100"),
                  fontsize=14, fontweight="bold", color=INK, loc="left", pad=12)
-    ax.plot(df["year"], wage_idx, color=C_WAGE, linewidth=2.4, marker="o",
-            markersize=4, label=L("시간당 명목임금", "Hourly wage"), zorder=3)
-    ax.plot(df["year"], apt_idx, color=C_APT, linewidth=2.4, marker="o",
-            markersize=4, label=L("서울 아파트 실거래가", "Seoul apt. price"), zorder=3)
+    for s, mode, color, ko, en in [
+        (wi, wmode, C_WAGE, "시간당 명목임금", "Hourly wage"),
+        (ai, amode, C_APT, "서울 아파트 실거래가", "Seoul apt. price"),
+    ]:
+        marker = "" if mode == "monthly" else "o"
+        ax.plot(s["t"], s["v"], color=color, linewidth=2.4, marker=marker,
+                markersize=4, label=L(ko, en), zorder=3)
+        ax.annotate(f"{s['v'].iloc[-1]:,.0f}", xy=(s["t"].iloc[-1], s["v"].iloc[-1]),
+                    xytext=(6, 0), textcoords="offset points", va="center",
+                    fontsize=10, color=color, fontweight="bold")
     ax.axhline(100, color=MUTED, linewidth=0.8, linestyle="--", zorder=1)
     _style_axis(ax)
-    ax.set_ylabel(L(f"{base_year}=100", f"{base_year}=100"), fontsize=10, color=MUTED)
+    ax.set_ylabel(f"{base}=100", fontsize=10, color=MUTED)
     ax.set_xlabel(L("연도", "Year"), fontsize=10, color=MUTED)
-    ax.set_xticks(df["year"][::2])
+    _xticks(ax, min(wi["t"].min(), ai["t"].min()), max(wi["t"].max(), ai["t"].max()))
     ax.legend(frameon=False, fontsize=11, loc="upper left")
-
-    for series, color in ((wage_idx, C_WAGE), (apt_idx, C_APT)):
-        ax.annotate(f"{series.iloc[-1]:,.0f}",
-                    xy=(df["year"].iloc[-1], series.iloc[-1]),
-                    xytext=(6, 0), textcoords="offset points",
-                    va="center", fontsize=10, color=color, fontweight="bold")
-
     fig.tight_layout()
     path = os.path.join(OUT, "wage_vs_apartment_index.png")
     fig.savefig(path, dpi=150, facecolor="#fcfcfb")
@@ -166,15 +173,15 @@ def fig_indexed(df: pd.DataFrame):
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    df = load()
-    rate_m = load_rate_monthly()
-    p1 = fig_three_panels(df, rate_m)
-    p2 = fig_indexed(df)
+    wage, wmode = get_series("hourly_wage_monthly.csv", "hourly_wage.csv", "hourly_wage_won")
+    apt, amode = get_series("seoul_apt_monthly.csv", "seoul_apartment.csv", "seoul_apt_avg_price_100m")
+    rate, rmode = get_series("base_rate_monthly.csv", "base_rate.csv", "base_rate_pct")
+
+    p1 = fig_three_panels(wage, wmode, apt, amode, rate, rmode)
+    p2 = fig_indexed(wage, wmode, apt, amode)
     print(f"한글 폰트: {'사용' if KO else '미설치 → 영문 라벨'}")
-    print(f"저장: {p1}")
-    print(f"저장: {p2}")
-    print("\n=== 데이터 ===")
-    print(df.to_string(index=False))
+    print(f"임금={wmode}, 아파트={amode}, 금리={rmode}")
+    print(f"저장: {p1}\n저장: {p2}")
 
 
 if __name__ == "__main__":

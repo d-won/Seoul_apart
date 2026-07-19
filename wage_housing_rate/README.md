@@ -49,21 +49,33 @@ python build_charts.py        # outputs/ 에 PNG 2종 생성
 - **서울 아파트값**: KB 평균 매매가격(감정시세 평균이라 엄밀한 '실거래'는 아님, 실거래 흐름의 근사).
   주요 앵커(2018 8억, 2020 10억, 2025.07 14.06억, 2025.12 15.08억) 확인, 앵커 사이는 추세 보간.
 
-### 정확한 공식 수치로 갱신하기
+### 실측 월별로 채우기 (권장)
 
-이 리포지토리를 만든 환경에서는 한국 통계포털 접속이 네트워크 정책상 차단되어
-원자료 표를 직접 받지 못했습니다. **외부망이 열린 로컬에서** API 키를 넣어 갱신하세요.
+`build_charts.py`는 `data/*_monthly.csv`(월별)가 있으면 **자동으로 월별 차트**로 그립니다.
+정책금리는 이미 월별(변경 이력 기반). 임금·아파트도 월별로 채우려면 아래를 실행하세요.
+
+> ⚠️ 이 리포지토리를 만든 환경은 통계포털(KOSIS·ECOS·한국부동산원)뿐 아니라 국제
+> 소스(FRED·OECD)까지 네트워크 정책상 **전부 차단**되어 원자료를 못 받습니다.
+> **외부망이 열린 환경(본인 PC 또는 해당 도메인을 허용한 환경)에서** 실행해야 합니다.
 
 ```bash
-export ECOS_API_KEY=...    # 한국은행 ECOS  https://ecos.bok.or.kr/api
-export KOSIS_API_KEY=...   # 국가통계포털   https://kosis.kr/openapi
-python src/fetch_live.py
+# 필수: 한국은행 ECOS 키(무료)
+export ECOS_API_KEY=...
+
+# KOSIS는 표마다 코드가 달라, 포털이 만들어 주는 OpenAPI URL을 그대로 사용:
+#   KOSIS 통계표 → [OpenAPI] → 조회 URL 생성(주기=월) → 아래에 붙여넣기
+export KOSIS_APT_URL='https://kosis.kr/openapi/statisticsData.do?method=getList&apiKey=...&orgId=408&tblId=DT_KAB_11672_S1&prdSe=M&...'
+export KOSIS_WAGE_URL='https://kosis.kr/openapi/statisticsData.do?method=getList&apiKey=...&tblId=DT_118N_MON051&prdSe=M&...'
+#   (임금 표가 '시간당 임금총액'을 직접 안 주면 KOSIS_WAGE_PAY_URL / KOSIS_WAGE_HRS_URL 두 개로 나눠서)
+
+python src/fetch_live.py      # → data/*_monthly.csv 생성
+python build_charts.py        # → 세 지표 모두 월별로 재생성
 ```
 
 관련 통계표
-- 임금: KOSIS `DT_118N_LCE0001`(고용형태별), `DT_118N_MON051`(산업·규모별)
-- 아파트 실거래가지수: KOSIS `DT_KAB_11672_S1` / 한국부동산원 공동주택 실거래가격지수
-- 기준금리: ECOS `722Y001`
+- 임금: KOSIS `DT_118N_MON051`(산업·규모별, 월), `DT_118N_LCE0001`(고용형태별, 연)
+- 아파트 실거래가지수: KOSIS `DT_KAB_11672_S1`(한국부동산원 아파트 실거래가격지수, 월)
+- 기준금리: ECOS `722Y001`(월)
 
 ## 구조
 

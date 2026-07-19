@@ -1,23 +1,34 @@
 #!/usr/bin/env python3
-"""공식 원자료를 API로 직접 수집(선택) — 사용자 로컬 환경에서 실행.
+"""공식 원자료를 API로 받아 **실측 월별 CSV**를 생성한다.
 
-주의: Claude Code 웹 실행 환경에서는 한국 통계포털(ECOS·KOSIS)로의
-외부 접속이 네트워크 정책상 차단(CONNECT 403)됩니다. 따라서 이 스크립트는
-**본인 PC 등 외부망이 열린 환경**에서 API 키를 넣고 실행해야 정확한
-공식 수치를 받아 data/*.csv 를 덮어씁니다.
+생성물(있으면 build_charts.py 가 자동으로 월별 차트로 그림):
+  data/base_rate_monthly.csv     month,base_rate_pct          ← ECOS(자동)
+  data/hourly_wage_monthly.csv   month,hourly_wage_won        ← KOSIS
+  data/seoul_apt_monthly.csv     month,seoul_apt_avg_price_100m(또는 지수)  ← KOSIS
 
-필요 키
-  - ECOS_API_KEY : 한국은행 ECOS  (https://ecos.bok.or.kr/api  무료 신청)
-  - KOSIS_API_KEY: 국가통계포털   (https://kosis.kr/openapi   무료 신청)
+주의: Claude Code 웹 실행 환경은 기본적으로 통계포털 접속이 차단된다.
+이 스크립트는 **외부망이 열린 환경**(본인 PC 또는 해당 도메인을 허용한 환경)에서
+실행해야 한다. 필요한 허용 도메인:
+  ecos.bok.or.kr, kosis.kr
 
-수집 대상
-  1) 정책금리   : ECOS 통계표 722Y001 (한국은행 기준금리)
-  2) 아파트값   : KOSIS 408 / DT_KAB_11672_S1 (아파트 매매 실거래가격지수, 서울)
-  3) 시간당임금 : KOSIS 사업체노동력조사 시간당 임금총액 (표ID는 아래 주석 참고)
+── 키/URL (환경변수) ───────────────────────────────────────────────
+필수
+  ECOS_API_KEY        한국은행 ECOS 인증키   https://ecos.bok.or.kr/api  (무료)
 
-레포에 포함된 data/*.csv 는 위 포털 접속이 막힌 환경에서
-확인된 앵커 수치 + 공식 변동률로 재구성한 값이다(각 CSV 주석의 신뢰도 표기 참고).
-정확한 공식 수치가 필요하면 이 스크립트로 갱신할 것.
+KOSIS는 표마다 분류코드가 달라, 포털이 만들어 주는 'OpenAPI URL'을 그대로 쓰는 게 가장 확실하다.
+  KOSIS 통계표 → 우측 상단 [OpenAPI] → '조회 URL' 생성(주기=월, 기간 지정) → 그 URL을 아래에 넣는다.
+
+  KOSIS_APT_URL       서울 아파트 실거래가격지수(월) getList URL
+                      예) https://kosis.kr/openapi/statisticsData.do?method=getList&apiKey=...&
+                          orgId=408&tblId=DT_KAB_11672_S1&prdSe=M&startPrdDe=200601&endPrdDe=202612&
+                          objL1=<서울코드>&itmId=<지수항목>&format=json&jsonVD=Y
+
+  시간당 임금(사업체노동력조사, 월). 표가 '시간당 임금총액'을 직접 주면 하나만:
+  KOSIS_WAGE_URL      시간당 임금총액(원) getList URL
+  또는 월임금총액과 월근로시간을 나눠 계산하려면 두 개:
+  KOSIS_WAGE_PAY_URL  월 임금총액(원) URL
+  KOSIS_WAGE_HRS_URL  월 근로시간(시간) URL
+────────────────────────────────────────────────────────────────
 """
 from __future__ import annotations
 
@@ -29,39 +40,108 @@ try:
 except ImportError:
     sys.exit("requests 필요:  pip install requests")
 
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA = os.path.join(HERE, "data")
 
-def fetch_base_rate(ecos_key: str):
-    """ECOS 722Y001 (기준금리) 월별 → 연말 값."""
-    url = (f"https://ecos.bok.or.kr/api/StatisticSearch/{ecos_key}"
-           f"/json/kr/1/10000/722Y001/M/200501/202412/0101000")
+
+def _ym(prd_de: str) -> str:
+    """'YYYYMM' → 'YYYY-MM'."""
+    return f"{prd_de[:4]}-{prd_de[4:6]}"
+
+
+def fetch_base_rate_ecos(key: str) -> dict:
+    """ECOS 722Y001(기준금리) 월별. {'YYYY-MM': rate}."""
+    url = (f"https://ecos.bok.or.kr/api/StatisticSearch/{key}"
+           f"/json/kr/1/100000/722Y001/M/200501/202612/0101000")
     r = requests.get(url, timeout=30)
     r.raise_for_status()
     rows = r.json()["StatisticSearch"]["row"]
-    yearly = {}
-    for row in rows:  # TIME = YYYYMM
-        y = row["TIME"][:4]
-        yearly[y] = float(row["DATA_VALUE"])  # 마지막(연말) 값이 남음
-    return yearly
+    return {_ym(x["TIME"]): float(x["DATA_VALUE"]) for x in rows}
+
+
+def fetch_kosis(url: str) -> dict:
+    """KOSIS getList URL → {'YYYY-MM': value}. PRD_DE(YYYYMM), DT(값)."""
+    r = requests.get(url, timeout=60)
+    r.raise_for_status()
+    data = r.json()
+    if isinstance(data, dict) and data.get("err"):
+        raise RuntimeError(f"KOSIS 오류: {data}")
+    out = {}
+    for x in data:
+        prd = x.get("PRD_DE", "")
+        if len(prd) == 6:  # 월 데이터
+            try:
+                out[_ym(prd)] = float(x["DT"])
+            except (ValueError, KeyError):
+                pass
+    if not out:
+        raise RuntimeError("KOSIS 응답에 월(YYYYMM) 데이터가 없음 — prdSe=M 인지 URL 확인")
+    return out
+
+
+def _write(path: str, header: str, comment: str, series: dict):
+    months = sorted(series)
+    with open(path, "w") as f:
+        f.write(f"# {comment}\n{header}\n")
+        for m in months:
+            f.write(f"{m},{series[m]}\n")
+    print(f"  → {os.path.relpath(path, HERE)}  ({len(months)}개월, 최신 {months[-1]}={series[months[-1]]})")
 
 
 def main():
-    ecos = os.environ.get("ECOS_API_KEY")
-    kosis = os.environ.get("KOSIS_API_KEY")
-    if not ecos:
-        print("ECOS_API_KEY 미설정 — 기준금리 수집 건너뜀")
-    else:
+    os.makedirs(DATA, exist_ok=True)
+    did = []
+
+    # 1) 기준금리 — ECOS (자동)
+    key = os.environ.get("ECOS_API_KEY")
+    if key:
         try:
-            yr = fetch_base_rate(ecos)
-            print("기준금리(연말):")
-            for y in sorted(yr):
-                print(f"  {y}: {yr[y]}")
+            _write(os.path.join(DATA, "base_rate_monthly.csv"),
+                   "month,base_rate_pct", "한국은행 기준금리 월별 (ECOS 722Y001)",
+                   fetch_base_rate_ecos(key))
+            did.append("base_rate")
         except Exception as e:  # noqa: BLE001
             print(f"기준금리 수집 실패: {e}")
-    if not kosis:
-        print("\nKOSIS_API_KEY 미설정 — 아파트값·시간당임금 수집 건너뜀")
-        print("KOSIS 표: 아파트 실거래가격지수 DT_KAB_11672_S1 (org 408),")
-        print("          사업체노동력조사 시간당 임금총액(사업체규모/근로자지위 조건 선택).")
-    print("\n외부망이 막힌 환경에서는 실패가 정상입니다. 로컬에서 키를 넣고 실행하세요.")
+    else:
+        print("ECOS_API_KEY 미설정 — 기준금리 건너뜀(레포의 변경이력 기반 월별 CSV 사용)")
+
+    # 2) 서울 아파트 실거래가(지수) — KOSIS URL
+    apt_url = os.environ.get("KOSIS_APT_URL")
+    if apt_url:
+        try:
+            _write(os.path.join(DATA, "seoul_apt_monthly.csv"),
+                   "month,seoul_apt_avg_price_100m",
+                   "서울 아파트 실거래가(월) — KOSIS_APT_URL (지수/평균가는 URL에 따름)",
+                   fetch_kosis(apt_url))
+            did.append("seoul_apt")
+        except Exception as e:  # noqa: BLE001
+            print(f"아파트 수집 실패: {e}")
+    else:
+        print("KOSIS_APT_URL 미설정 — 서울 아파트 월별 건너뜀")
+
+    # 3) 시간당 임금 — KOSIS URL(단일) 또는 임금총액/근로시간 두 URL
+    wage_url = os.environ.get("KOSIS_WAGE_URL")
+    pay_url = os.environ.get("KOSIS_WAGE_PAY_URL")
+    hrs_url = os.environ.get("KOSIS_WAGE_HRS_URL")
+    try:
+        if wage_url:
+            wage = fetch_kosis(wage_url)
+        elif pay_url and hrs_url:
+            pay, hrs = fetch_kosis(pay_url), fetch_kosis(hrs_url)
+            wage = {m: round(pay[m] / hrs[m]) for m in (pay.keys() & hrs.keys()) if hrs[m]}
+        else:
+            wage = None
+            print("KOSIS_WAGE_URL(또는 PAY/HRS URL) 미설정 — 시간당 임금 월별 건너뜀")
+        if wage:
+            _write(os.path.join(DATA, "hourly_wage_monthly.csv"),
+                   "month,hourly_wage_won", "시간당 명목임금 월별 — KOSIS(사업체노동력조사)", wage)
+            did.append("hourly_wage")
+    except Exception as e:  # noqa: BLE001
+        print(f"임금 수집 실패: {e}")
+
+    print(f"\n완료: {', '.join(did) if did else '없음'} 수집. 이후 `python build_charts.py` 실행 시 월별로 그려집니다.")
+    if not did:
+        print("외부망이 막힌 환경에서는 실패가 정상입니다. 도메인 허용 + 키/URL 설정 후 재실행하세요.")
 
 
 if __name__ == "__main__":
