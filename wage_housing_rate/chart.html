@@ -189,8 +189,14 @@
           전체근로자 1인당 <b>시간당 임금총액</b>(원/시간, 매년 6월 기준).</li>
         <li><b>서울 아파트 실거래가</b> — KB부동산 서울 아파트 <b>평균 매매가격</b>(억 원, 연말 기준).
           직관적 가격 수준을 보여주며, 표에는 한국부동산원 <b>실거래가격지수</b>(2021≈100)도 함께 수록.</li>
-        <li><b>정책금리</b> — 한국은행 <b>기준금리</b>(%, 연말 12월 기준).</li>
+        <li><b>정책금리</b> — 한국은행 <b>기준금리</b>(%). 3번 패널은 변경 이력으로 구성한
+          <b>실제 월별</b> 시계열(2026.07 = 2.75%까지). 지수 비교·표는 연말값 사용.</li>
       </ul>
+      <p style="margin:2px 0 0"><b>월별 데이터에 대해</b>: 세 지표 모두 원래는 월별 공식통계가 있습니다
+        (사업체노동력조사 월별 임금, 한국부동산원 월별 실거래가격지수, 기준금리 변경 이력).
+        이 중 <b>기준금리만</b> 공개 이력으로 정확히 월별 재구성이 가능해 월별로 그렸고,
+        임금·아파트 월별 원자료는 이 환경의 포털 접속 차단으로 받지 못해 확보된 연간·앵커값으로
+        표시했습니다. 월별 정밀 시계열은 <code>src/fetch_live.py</code>로 받을 수 있습니다.</p>
       <h3>중요 한계</h3>
       <ul>
         <li>이 차트를 생성한 환경에서는 한국 통계포털(KOSIS·ECOS·한국부동산원) 직접 접속이
@@ -220,7 +226,29 @@ const WAGE  = [9300,9900,10500,11100,11700,12500,13300,14100,14900,15700,16600,1
 const APT   = [4.0,4.6,4.9,4.9,5.0,4.8,4.8,4.7,4.8,5.1,5.6,5.9,6.7,8.1,8.6,10.6,12.5,11.8,11.6,13.0,15.1];
 const RATE  = [3.75,4.50,5.00,3.00,2.00,2.50,3.25,2.75,2.50,2.00,1.50,1.25,1.50,1.75,1.25,0.50,1.00,3.25,3.50,3.00,2.50];
 const APT_INDEX = [null,48,50,48,53,52,53,50,49,51,56,60,65,73,76,86,100,78,86,92,105]; // 한국부동산원 실거래가격지수
-// 2026(진행중): 기준금리 2.75%로 7월 인상 · 서울 집값 상승세 지속 · 임금 6월조사 미발표 → 연간점 미포함
+
+// 정책금리 월별(실제): 한국은행 기준금리 변경 이력 → 월말 유효금리. 2026-07 = 2.75%(현재)
+const RATE_CHANGES = [["2005-01",3.25],["2005-10",3.50],["2005-12",3.75],["2006-02",4.00],["2006-06",4.25],
+ ["2006-08",4.50],["2007-07",4.75],["2007-08",5.00],["2008-08",5.25],["2008-10",4.25],["2008-11",4.00],
+ ["2008-12",3.00],["2009-01",2.50],["2009-02",2.00],["2010-07",2.25],["2010-11",2.50],["2011-01",2.75],
+ ["2011-03",3.00],["2011-06",3.25],["2012-07",3.00],["2012-10",2.75],["2013-05",2.50],["2014-08",2.25],
+ ["2014-10",2.00],["2015-03",1.75],["2015-06",1.50],["2016-06",1.25],["2017-11",1.50],["2018-11",1.75],
+ ["2019-07",1.50],["2019-10",1.25],["2020-03",0.75],["2020-05",0.50],["2021-08",0.75],["2021-11",1.00],
+ ["2022-01",1.25],["2022-04",1.50],["2022-05",1.75],["2022-07",2.25],["2022-08",2.50],["2022-10",3.00],
+ ["2022-11",3.25],["2023-01",3.50],["2024-10",3.25],["2024-11",3.00],["2025-02",2.75],["2025-05",2.50],
+ ["2026-07",2.75]];
+function expandMonthly(changes,endYM){
+  const ey=+endYM.slice(0,4), em=+endYM.slice(5,7);
+  const pts=[]; let ci=0, cur=changes[0][1], y=2005, m=1;
+  while (y<ey || (y===ey && m<=em)){
+    const ym=y+"-"+String(m).padStart(2,"0");
+    while (ci+1<changes.length && changes[ci+1][0]<=ym){ ci++; cur=changes[ci][1]; }
+    pts.push([y+(m-1)/12, cur, y+"."+String(m).padStart(2,"0")]);
+    m++; if(m>12){m=1;y++;}
+  }
+  return pts;
+}
+const RATE_M = expandMonthly(RATE_CHANGES,"2026-07");
 // official-from-year flags
 const WAGE_OFFICIAL_FROM = 2018;
 const APT_CONFIRMED = {2018:1,2019:1,2020:1,2025:1};
@@ -325,6 +353,67 @@ function makeChart(host, opts){
   host.insertBefore(svg, tip);
 }
 
+// ---------- monthly (time-axis) line chart ----------
+function makeMonthly(host, opts){
+  // opts: { points:[[t,v,label]], color, yFmt, valFmt, tipFmt, height, compact, yTicks }
+  const W = opts.compact ? 380 : 760, H = opts.height || 250;
+  const padL = opts.compact ? 38 : 56, padR = opts.compact ? 26 : 52, padT = 14, padB = 26;
+  const pts = opts.points;
+  const tMin = pts[0][0], tMax = pts[pts.length-1][0];
+  let ymin = Math.min.apply(null, pts.map(function(p){return p[1];}));
+  let ymax = Math.max.apply(null, pts.map(function(p){return p[1];}));
+  const span = ymax - ymin || 1; ymin -= span*0.10; ymax += span*0.10;
+  const x = function(t){ return padL + (W-padL-padR) * (t-tMin)/(tMax-tMin); };
+  const y = function(v){ return padT + (H-padT-padB) * (1-(v-ymin)/(ymax-ymin)); };
+
+  const NS="http://www.w3.org/2000/svg";
+  const svg=document.createElementNS(NS,"svg");
+  svg.setAttribute("viewBox","0 0 "+W+" "+H); svg.style.aspectRatio = W+" / "+H;
+  function el(t,a){ const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); return e; }
+
+  const ticks = niceTicks(ymin, ymax, opts.yTicks||4);
+  ticks.forEach(function(t){
+    if (t<ymin||t>ymax) return;
+    svg.appendChild(el("line",{class:"gridline",x1:padL,x2:W-padR,y1:y(t),y2:y(t)}));
+    const tx=el("text",{class:"tick",x:padL-8,y:y(t)+4,"text-anchor":"end"}); tx.textContent=opts.yFmt(t);
+    svg.appendChild(tx);
+  });
+  for (let yr=Math.ceil(tMin); yr<=Math.floor(tMax); yr++){
+    if (yr%3!==0) continue;
+    const tx=el("text",{class:"tick",x:x(yr),y:H-8,"text-anchor":"middle"}); tx.textContent="’"+String(yr).slice(2);
+    svg.appendChild(tx);
+  }
+  // step-style line through monthly points
+  let d="";
+  pts.forEach(function(p,i){ d += (i===0?"M":" L")+x(p[0])+" "+y(p[1]); });
+  svg.appendChild(el("path",{class:"series-line",d:d,stroke:opts.color}));
+  const last=pts[pts.length-1];
+  svg.appendChild(el("circle",{class:"series-dot",cx:x(last[0]),cy:y(last[1]),r:3.4,fill:opts.color}));
+  const lb=el("text",{class:"end-label",x:x(last[0])+7,y:y(last[1])+4,fill:opts.color});
+  lb.textContent=opts.valFmt(last[1]); svg.appendChild(lb);
+
+  const cross=el("line",{class:"crosshair",y1:padT,y2:H-padB}); svg.appendChild(cross);
+  const hd=el("circle",{class:"hover-dot",r:4,fill:opts.color,stroke:"var(--surface)","stroke-width":1.6}); svg.appendChild(hd);
+  const overlay=el("rect",{x:0,y:0,width:W,height:H,fill:"transparent",style:"cursor:crosshair"}); svg.appendChild(overlay);
+  const tip=document.createElement("div"); tip.className="tooltip"; host.appendChild(tip);
+  function move(ev){
+    const r=svg.getBoundingClientRect();
+    const t=tMin+(( (ev.clientX-r.left)/r.width*W )-padL)/(W-padL-padR)*(tMax-tMin);
+    let bi=0, bd=1e9;
+    for (let i=0;i<pts.length;i++){ const dd=Math.abs(pts[i][0]-t); if(dd<bd){bd=dd;bi=i;} }
+    const p=pts[bi];
+    cross.setAttribute("x1",x(p[0])); cross.setAttribute("x2",x(p[0])); cross.style.opacity=1;
+    hd.setAttribute("cx",x(p[0])); hd.setAttribute("cy",y(p[1])); hd.style.opacity=1;
+    tip.innerHTML='<span class="ttyear">'+p[2]+'</span><div class="ttrow"><i style="background:'+opts.color+'"></i><b>'+opts.tipFmt(p[1])+'</b></div>';
+    tip.style.left=(x(p[0])/W*r.width)+"px"; tip.style.top=(padT/H*r.height)+"px"; tip.style.opacity=1;
+  }
+  overlay.addEventListener("mousemove",move);
+  overlay.addEventListener("mouseleave",function(){ tip.style.opacity=0; cross.style.opacity=0; hd.style.opacity=0; });
+  overlay.addEventListener("touchstart",function(e){ move(e.touches[0]); },{passive:true});
+  overlay.addEventListener("touchmove",function(e){ move(e.touches[0]); },{passive:true});
+  host.insertBefore(svg, tip);
+}
+
 function lastIdx(a){ for(let i=a.length-1;i>=0;i--) if(a[i]!=null) return i; return -1; }
 function niceTicks(min,max,count){
   const raw=(max-min)/count; const mag=Math.pow(10,Math.floor(Math.log10(raw)));
@@ -345,8 +434,8 @@ document.getElementById("kpis").innerHTML =
    "2005년 대비 <b>"+pctChange(WAGE)+"%</b> ↑ · 지수 "+Math.round(WAGE_IDX[LAST])) +
  kpiCard("var(--apt)","서울 아파트 평균가 (2025)","15.1억원",
    '<span class="up">'+pctChange(APT)+"%</span> · 지수 "+Math.round(APT_IDX[LAST])+" (임금 크게 앞섬)") +
- kpiCard("var(--rate)","정책금리 (기준금리)","2.50%",
-   "2025년말 · <b>2026.07 2.75%로 인상</b> · 20년 저점 0.50%(2020)");
+ kpiCard("var(--rate)","정책금리 (기준금리)","2.75%",
+   "<b>2026.07 현재</b>(월별) · 2025년말 2.50% · 20년 저점 0.50%(2020)~고점 5.25%(2008)");
 function kpiCard(color,lab,val,sub){
   return '<div class="kpi"><p class="lab"><span class="dot" style="background:'+color+'"></span>'+lab+
     '</p><div class="val">'+val+'</div><p class="sub">'+sub+'</p></div>';
@@ -365,19 +454,26 @@ makeChart(document.getElementById("heroHost"), {
 
 // ---------- 3 small-multiple panels ----------
 const panelDefs=[
-  {t:"① 시간당 명목임금", u:"원/시간", vals:WAGE, color:"--wage", yFmt:function(v){return (v/1000).toFixed(0)+"천";}, valFmt:won, tipFmt:function(v){return won(v)+"원";}},
-  {t:"② 서울 아파트 평균 실거래가", u:"억 원", vals:APT, color:"--apt", yFmt:function(v){return v.toFixed(0);}, valFmt:eok, tipFmt:function(v){return v.toFixed(1)+"억";}},
-  {t:"③ 정책금리 (기준금리)", u:"%", vals:RATE, color:"--rate", yFmt:function(v){return v.toFixed(0);}, valFmt:function(v){return v.toFixed(2);}, tipFmt:function(v){return v.toFixed(2)+"%";}}
+  {t:"① 시간당 명목임금", u:"원/시간 · 연간(~2025)", vals:WAGE, color:"--wage", yFmt:function(v){return (v/1000).toFixed(0)+"천";}, valFmt:won, tipFmt:function(v){return won(v)+"원";}},
+  {t:"② 서울 아파트 평균 실거래가", u:"억 원 · 연간(~2025)", vals:APT, color:"--apt", yFmt:function(v){return v.toFixed(0);}, valFmt:eok, tipFmt:function(v){return v.toFixed(1)+"억";}},
+  {t:"③ 정책금리 (기준금리)", u:"% · 월별(2026.07까지)", monthly:true, points:RATE_M, color:"--rate", yFmt:function(v){return v.toFixed(0);}, valFmt:function(v){return v.toFixed(2);}, tipFmt:function(v){return v.toFixed(2)+"%";}}
 ];
+function renderPanel(p, host){
+  if (p.monthly){
+    makeMonthly(host,{ height:250, compact:true, points:p.points, color:cssVar(p.color),
+      yFmt:p.yFmt, valFmt:p.valFmt, tipFmt:p.tipFmt, yTicks:4 });
+  } else {
+    makeChart(host,{ height:250, compact:true, series:[{values:p.vals, color:cssVar(p.color)}],
+      yFmt:p.yFmt, valFmt:p.valFmt, tipFmt:p.tipFmt, yTicks:4 });
+  }
+}
 const panelsEl=document.getElementById("panels");
 panelDefs.forEach(function(p){
   const card=document.createElement("section"); card.className="card";
   card.innerHTML='<h2 style="font-size:15px">'+p.t+'</h2><p class="note">'+p.u+'</p>';
   const host=document.createElement("div"); host.className="chart-host"; card.appendChild(host);
   panelsEl.appendChild(card);
-  makeChart(host,{ height:250, compact:true,
-    series:[{values:p.vals, color:cssVar(p.color)}],
-    yFmt:p.yFmt, valFmt:p.valFmt, tipFmt:p.tipFmt, yTicks:4 });
+  renderPanel(p, host);
 });
 
 // ---------- data table ----------
@@ -422,7 +518,7 @@ function rerender(){
     card.innerHTML='<h2 style="font-size:15px">'+p.t+'</h2><p class="note">'+p.u+'</p>';
     const host=document.createElement("div"); host.className="chart-host"; card.appendChild(host);
     document.getElementById("panels").appendChild(card);
-    makeChart(host,{height:250,compact:true,series:[{values:p.vals,color:cssVar(p.color)}],yFmt:p.yFmt,valFmt:p.valFmt,tipFmt:p.tipFmt,yTicks:4});
+    renderPanel(p, host);
   });
 }
 </script>
