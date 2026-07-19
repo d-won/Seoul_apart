@@ -140,7 +140,7 @@ def fig_three_panels(wage, wmode, apt, amode, rate, rmode):
     return path
 
 
-def fig_indexed(wage, wmode, apt, amode):
+def fig_indexed(wage, wmode, apt, amode, rate, rmode):
     fig, ax = plt.subplots(figsize=(10, 6))
     # 공통 기준시점 = 두 계열 모두 값이 있는 첫 시점(월별 임금이 2020~라 대개 2020.01).
     # 서로 다른 시점을 100으로 잡으면 비교가 왜곡되므로 공통 기준월=100으로 맞춘다.
@@ -153,8 +153,8 @@ def fig_indexed(wage, wmode, apt, amode):
     wi, ai = _rebase(wage), _rebase(apt)
     by, bm = int(base_t), round((base_t - int(base_t)) * 12) + 1
     base = f"{by}.{bm:02d}"
-    ax.set_title(L(f"임금 vs 서울 아파트값 — {base}=100 지수 비교",
-                   f"Wage vs Seoul apt. — indexed to {base}=100"),
+    ax.set_title(L(f"임금 vs 서울 아파트값 vs 정책금리 — {base}=100 지수 + 금리(%)",
+                   f"Wage vs Seoul apt. (={base}=100) vs policy rate (%)"),
                  fontsize=14, fontweight="bold", color=INK, loc="left", pad=12)
     for s, mode, color, ko, en in [
         (wi, wmode, C_WAGE, "시간당 명목임금", "Hourly wage"),
@@ -170,7 +170,25 @@ def fig_indexed(wage, wmode, apt, amode):
     _style_axis(ax)
     ax.set_ylabel(f"{base}=100", fontsize=10, color=MUTED)
     ax.set_xlabel(L("연도", "Year"), fontsize=10, color=MUTED)
-    _xticks(ax, min(wi["t"].min(), ai["t"].min()), max(wi["t"].max(), ai["t"].max()))
+
+    # 정책금리는 단위(%)가 달라 오른쪽 축에 겹쳐 그린다.
+    axR = ax.twinx()
+    rstyle = "steps-post" if rmode == "monthly" else "default"
+    axR.plot(rate["t"], rate["v"], color=C_RATE, linewidth=1.5, drawstyle=rstyle,
+             zorder=2, alpha=0.9)
+    axR.annotate(f"{rate['v'].iloc[-1]:.2f}%", xy=(rate["t"].iloc[-1], rate["v"].iloc[-1]),
+                 xytext=(6, 0), textcoords="offset points", va="center",
+                 fontsize=9, color=C_RATE, fontweight="bold")
+    axR.set_ylabel(L("정책금리 %", "Policy rate %"), fontsize=10, color=C_RATE)
+    axR.tick_params(axis="y", colors=C_RATE, labelsize=9)
+    for sp in ("top",):
+        axR.spines[sp].set_visible(False)
+    axR.spines["right"].set_color(C_RATE)
+    # 정책금리 범례 항목(우축이라 프록시 선으로 추가)
+    ax.plot([], [], color=C_RATE, linewidth=1.6, label=L("정책금리(우축 %)", "Policy rate (right, %)"))
+
+    _xticks(ax, min(wi["t"].min(), ai["t"].min(), rate["t"].min()),
+            max(wi["t"].max(), ai["t"].max(), rate["t"].max()))
     ax.legend(frameon=False, fontsize=11, loc="upper left")
     fig.tight_layout()
     path = os.path.join(OUT, "wage_vs_apartment_index.png")
@@ -186,7 +204,7 @@ def main():
     rate, rmode = get_series("base_rate_monthly.csv", "base_rate.csv", "base_rate_pct")
 
     p1 = fig_three_panels(wage, wmode, apt, amode, rate, rmode)
-    p2 = fig_indexed(wage, wmode, apt, amode)
+    p2 = fig_indexed(wage, wmode, apt, amode, rate, rmode)
     print(f"한글 폰트: {'사용' if KO else '미설치 → 영문 라벨'}")
     print(f"임금={wmode}, 아파트={amode}, 금리={rmode}")
     print(f"저장: {p1}\n저장: {p2}")
