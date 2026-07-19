@@ -122,23 +122,33 @@ def main():
     else:
         print("KOSIS_APT_URL 미설정 — 서울 아파트 월별 건너뜀")
 
-    # 3) 시간당 임금 — KOSIS URL(단일) 또는 임금총액/근로시간 두 URL
-    wage_url = os.environ.get("KOSIS_WAGE_URL")
-    pay_url = os.environ.get("KOSIS_WAGE_PAY_URL")
-    hrs_url = os.environ.get("KOSIS_WAGE_HRS_URL")
+    # 3) 시간당 임금 — 시간당 URL(단일) 또는 임금총액/근로시간 두 URL.
+    #    여러 기간(구계열/신계열)을 잇고 싶으면 PAY/HRS URL을 접미사 없이·2·3… 로 여러 쌍 지정.
+    #    예) KOSIS_WAGE_PAY_URL2/HRS_URL2 = 구계열(DT_118N_MON041, 2011~2019).
+    #    ※ 2020년 표준산업분류 개편으로 구계열(~2019)과 신계열(2020~)은 수준 단절이 있으니 주의.
     try:
+        wage = {}
+        wage_url = os.environ.get("KOSIS_WAGE_URL")
         if wage_url:
-            wage = fetch_kosis(wage_url)
-        elif pay_url and hrs_url:
-            pay, hrs = fetch_kosis(pay_url), fetch_kosis(hrs_url)
-            wage = {m: round(pay[m] / hrs[m]) for m in (pay.keys() & hrs.keys()) if hrs[m]}
-        else:
-            wage = None
-            print("KOSIS_WAGE_URL(또는 PAY/HRS URL) 미설정 — 시간당 임금 월별 건너뜀")
+            wage.update(fetch_kosis(wage_url))
+        for sfx in ("", "2", "3", "4"):
+            pu = os.environ.get("KOSIS_WAGE_PAY_URL" + sfx)
+            hu = os.environ.get("KOSIS_WAGE_HRS_URL" + sfx)
+            if pu and hu:
+                pay, hrs = fetch_kosis(pu), fetch_kosis(hu)
+                seg = {m: round(pay[m] / hrs[m]) for m in (pay.keys() & hrs.keys()) if hrs[m]}
+                # 이미 있는 달은 덮어쓰지 않음(먼저 온 신계열 우선)
+                for m, v in seg.items():
+                    wage.setdefault(m, v)
         if wage:
             _write(os.path.join(DATA, "hourly_wage_monthly.csv"),
-                   "month,hourly_wage_won", "시간당 명목임금 월별 — KOSIS(사업체노동력조사)", wage)
+                   "month,hourly_wage_won",
+                   "시간당 명목임금 월별 — KOSIS 사업체노동력조사(임금총액/근로시간). "
+                   "2011~2019=구계열(9차분류), 2020~=신계열(10차분류): 2020 개편으로 수준 단절 있음",
+                   wage)
             did.append("hourly_wage")
+        else:
+            print("KOSIS_WAGE_URL(또는 PAY/HRS URL) 미설정 — 시간당 임금 월별 건너뜀")
     except Exception as e:  # noqa: BLE001
         print(f"임금 수집 실패: {e}")
 

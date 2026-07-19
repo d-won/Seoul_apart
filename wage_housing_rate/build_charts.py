@@ -75,6 +75,17 @@ def get_series(monthly_name: str, annual_name: str, valcol: str):
     return a[["t", "v"]].dropna().sort_values("t").reset_index(drop=True), "annual"
 
 
+def _wage_break(ax, wage, label=True):
+    """임금 계열개편(2020년 표준산업분류 10차 개편) 지점에 세로 점선 표시."""
+    if wage["t"].min() < 2020 < wage["t"].max():
+        ax.axvline(2020, color=MUTED, linewidth=0.9, linestyle="--", alpha=0.6, zorder=1)
+        if label:
+            ax.annotate(L("2020 계열개편", "2020 series break"),
+                        xy=(2020, 0.97), xycoords=ax.get_xaxis_transform(),
+                        xytext=(3, 0), textcoords="offset points",
+                        ha="left", va="top", fontsize=8, color=MUTED)
+
+
 def _style_axis(ax):
     ax.grid(True, axis="y", color=GRID, linewidth=0.8, zorder=0)
     for s in ("top", "right"):
@@ -116,6 +127,7 @@ def fig_three_panels(wage, wmode, apt, amode, rate, rmode):
     axes[0].set_title(L("① 시간당 명목임금", "1) Hourly nominal wage"),
                       fontsize=12, color=INK, loc="left", pad=8)
     axes[0].set_ylabel(L("원 / 시간", "KRW / hour"), fontsize=10, color=MUTED)
+    _wage_break(axes[0], wage)
 
     _plot_series(axes[1], apt, amode, C_APT, lambda v: f"{v:,.1f}")
     axes[1].set_title(L("② 서울 아파트 실거래가격지수", "2) Seoul apt. real-transaction price index"),
@@ -167,6 +179,7 @@ def fig_indexed(wage, wmode, apt, amode, rate, rmode):
                     xytext=(6, 0), textcoords="offset points", va="center",
                     fontsize=10, color=color, fontweight="bold")
     ax.axhline(100, color=MUTED, linewidth=0.8, linestyle="--", zorder=1)
+    _wage_break(ax, wage)
     _style_axis(ax)
     ax.set_ylabel(f"{base}=100", fontsize=10, color=MUTED)
     ax.set_xlabel(L("연도", "Year"), fontsize=10, color=MUTED)

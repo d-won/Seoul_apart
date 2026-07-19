@@ -14,7 +14,7 @@
 
 ## 한눈에 보기
 
-- 월별 임금 공식통계가 시작된 **2020.1 이후**, 서울 아파트 실거래가격지수는 **+47%**(지수 100→147),
+- 2020.1(공통 기준월) 이후, 서울 아파트 실거래가격지수는 **+47%**(지수 100→147),
   시간당 명목임금은 **+12%**(지수 100→112)로 아파트값이 임금을 크게 앞질렀습니다.
 - 아파트 실거래가격지수(서울)는 2006.1 58.5 → 2021 고점 → 2022 조정 → **2026.4 196.3**.
 - 정책금리는 2020년 0.50% 저점 → 2023년 3.50% → **2026.7 2.75%**.
@@ -25,7 +25,7 @@
 | 지표 | 표 | 주기·기간 |
 |---|---|---|
 | 서울 아파트 실거래가격지수 | KOSIS `DT_KAB_11672_S1` (orgId 408, 서울) | 월 · 2006.01 ~ 2026.04 |
-| 시간당 임금(임금총액/근로시간) | KOSIS `DT_118N_MON051` (orgId 118, 전산업·전규모) | 월 · 2020.01 ~ 2025.12 |
+| 시간당 임금(임금총액/근로시간) | KOSIS `DT_118N_MON041`(2011~2019, 9차분류) + `DT_118N_MON051`(2020~, 10차분류), 전산업·전규모 | 월 · 2011.01 ~ 2025.12 |
 | 기준금리(월말 유효금리) | 한국은행 변경 이력 | 월 · 2005.01 ~ 2026.07 |
 
 ## 실행
@@ -56,10 +56,15 @@ EP='https://kosis.kr/openapi/Param/statisticsParameterData.do?method=getList&for
 # 서울 아파트 실거래가격지수 (지수 항목 itmId=T1, 서울 objL1=030)
 export KOSIS_APT_URL="$EP&apiKey=$KEY&orgId=408&tblId=DT_KAB_11672_S1&prdSe=M&startPrdDe=200601&endPrdDe=202612&objL1=030&itmId=T1&objL2=&objL3=&objL4=&objL5=&objL6=&objL7=&objL8="
 
-# 시간당 임금 = 전체임금총액(MD_12) ÷ 전체근로시간(MD_7), 전산업(objL1)·전규모(objL2=size01)
-WBASE="$EP&apiKey=$KEY&orgId=118&tblId=DT_118N_MON051&prdSe=M&startPrdDe=202001&endPrdDe=202512&objL1=190326INDUSTRY_10S0&objL2=size01&objL3=&objL4=&objL5=&objL6=&objL7=&objL8="
-export KOSIS_WAGE_PAY_URL="$WBASE&itmId=13103110311MD_12"
-export KOSIS_WAGE_HRS_URL="$WBASE&itmId=13103110311MD_7"
+# 시간당 임금 = 전체임금총액(MD_12) ÷ 전체근로시간(MD_7), 전산업·전규모(objL2=size01)
+# 신계열 2020~ (MON051, 10차분류 전체=190326INDUSTRY_10S0)
+WNEW="$EP&apiKey=$KEY&orgId=118&tblId=DT_118N_MON051&prdSe=M&startPrdDe=202001&endPrdDe=202512&objL1=190326INDUSTRY_10S0&objL2=size01&objL3=&objL4=&objL5=&objL6=&objL7=&objL8="
+export KOSIS_WAGE_PAY_URL="$WNEW&itmId=13103110311MD_12"
+export KOSIS_WAGE_HRS_URL="$WNEW&itmId=13103110311MD_7"
+# 구계열 2011~2019 (MON041, 9차분류 전체=15118INDUSTRY_9S0) — 2020 개편 전 구간
+WOLD="$EP&apiKey=$KEY&orgId=118&tblId=DT_118N_MON041&prdSe=M&startPrdDe=201101&endPrdDe=201912&objL1=15118INDUSTRY_9S0&objL2=size01&objL3=&objL4=&objL5=&objL6=&objL7=&objL8="
+export KOSIS_WAGE_PAY_URL2="$WOLD&itmId=13103110311MD_12"
+export KOSIS_WAGE_HRS_URL2="$WOLD&itmId=13103110311MD_7"
 
 python src/fetch_live.py      # → data/seoul_apt_monthly.csv, data/hourly_wage_monthly.csv
 python build_charts.py        # → 세 지표 모두 월별로 재생성
