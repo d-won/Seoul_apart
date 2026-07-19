@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""최근 20년(2005~2024) 세 지표 라인 차트 생성.
+"""최근 20여 년(2005~2025) 세 지표 라인 차트 생성.
 
   1) 시간당 명목임금 (원/시간)
   2) 서울 아파트 실거래가 (한국부동산원 실거래가격지수 및 평균 실거래가)
@@ -76,8 +76,8 @@ def _style_axis(ax):
 
 def fig_three_panels(df: pd.DataFrame):
     fig, axes = plt.subplots(3, 1, figsize=(10, 11), sharex=True)
-    fig.suptitle(L("최근 20년 세 지표 추이 (2005–2024)",
-                   "Three indicators, 2005–2024"),
+    fig.suptitle(L("세 지표 추이 (2005–2025)",
+                   "Three indicators, 2005–2025"),
                  fontsize=15, fontweight="bold", color=INK, y=0.98)
 
     panels = [

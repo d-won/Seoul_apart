@@ -1,4 +1,4 @@
-<title>임금 · 서울 아파트값 · 정책금리 (2005–2024)</title>
+<title>임금 · 서울 아파트값 · 정책금리 (2005–2025)</title>
 <style>
   :root {
     color-scheme: light;
@@ -146,10 +146,13 @@
 <div class="wrap">
   <header>
     <div>
-      <p class="eyebrow">2005 — 2024 · 최근 20년</p>
+      <p class="eyebrow">2005 — 2025 · 최근 20여 년</p>
       <h1>시간당 임금 · 서울 아파트 실거래가 · 정책금리</h1>
-      <p class="lede">같은 20년을 세 개의 선으로. 임금은 꾸준히 올랐지만, 서울 아파트값은
-        2015년 이후 임금을 앞질러 벌어졌고, 그 사이 정책금리는 두 번의 저금리기와 급등을 오갔습니다.</p>
+      <p class="lede">같은 기간을 세 개의 선으로. 임금은 꾸준히 올랐지만, 서울 아파트값은
+        2015년 이후 임금을 앞질렀고 <b>2025년 다시 급등</b>했습니다. 그 사이 정책금리는 두 번의 저금리기와 급등을 오갔습니다.</p>
+      <p class="lede" style="margin-top:8px;font-size:13.5px;color:var(--muted)">
+        2026년(진행 중): 기준금리 7월 <b>2.75%로 인상</b> · 서울 집값 상승세 지속 · 임금 6월 조사값 미발표 →
+        연간값이 완성된 <b>2025년까지</b> 표시</p>
     </div>
     <button class="theme-btn" id="themeBtn" aria-label="테마 전환">
       <span id="themeIcon">◐</span><span id="themeTxt">테마</span>
@@ -208,18 +211,19 @@
     </div>
   </details>
 
-  <footer>최근 20년(2005–2024) 세 지표 라인 차트 · 값은 확인 앵커+공식 변동률 기반 재구성(일부 추정 포함) · 인과 아닌 추세 비교용</footer>
+  <footer>2005–2025 세 지표 라인 차트 · 값은 확인 앵커+공식 변동률 기반 재구성(일부 추정 포함) · 인과 아닌 추세 비교용</footer>
 </div>
 
 <script>
-const YEARS = [2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024];
-const WAGE  = [9300,9900,10500,11100,11700,12500,13300,14100,14900,15700,16600,17500,18500,19522,20573,19316,19806,22651,22878,25156];
-const APT   = [4.0,4.6,4.9,4.9,5.0,4.8,4.8,4.7,4.8,5.1,5.6,5.9,6.7,8.1,8.6,10.6,12.3,12.6,11.9,12.1];
-const RATE  = [3.75,4.50,5.00,3.00,2.00,2.50,3.25,2.75,2.50,2.00,1.50,1.25,1.50,1.75,1.25,0.50,1.00,3.25,3.50,3.00];
-const APT_INDEX = [null,48,50,48,53,52,53,50,49,51,56,60,65,73,76,86,100,78,86,92]; // 한국부동산원 실거래가격지수
+const YEARS = [2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024,2025];
+const WAGE  = [9300,9900,10500,11100,11700,12500,13300,14100,14900,15700,16600,17500,18500,19522,20573,19316,19806,22651,22878,25156,25839];
+const APT   = [4.0,4.6,4.9,4.9,5.0,4.8,4.8,4.7,4.8,5.1,5.6,5.9,6.7,8.1,8.6,10.6,12.5,11.8,11.6,13.0,15.1];
+const RATE  = [3.75,4.50,5.00,3.00,2.00,2.50,3.25,2.75,2.50,2.00,1.50,1.25,1.50,1.75,1.25,0.50,1.00,3.25,3.50,3.00,2.50];
+const APT_INDEX = [null,48,50,48,53,52,53,50,49,51,56,60,65,73,76,86,100,78,86,92,105]; // 한국부동산원 실거래가격지수
+// 2026(진행중): 기준금리 2.75%로 7월 인상 · 서울 집값 상승세 지속 · 임금 6월조사 미발표 → 연간점 미포함
 // official-from-year flags
 const WAGE_OFFICIAL_FROM = 2018;
-const APT_CONFIRMED = {2018:1,2019:1,2020:1,2021:1,2023:1,2024:1};
+const APT_CONFIRMED = {2018:1,2019:1,2020:1,2025:1};
 
 function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 function idx100(a){ const b=a[0]; return a.map(function(v){return v/b*100;}); }
@@ -335,13 +339,14 @@ const pct=function(v){return (v%1===0?v.toFixed(0):v.toFixed(2))+"";};
 
 // ---------- render KPIs ----------
 function pctChange(a){ return Math.round((a[a.length-1]/a[0]-1)*100); }
+const LAST = YEARS.length-1;
 document.getElementById("kpis").innerHTML =
- kpiCard("var(--wage)","시간당 명목임금","25,156원",
-   "2005년 대비 <b>"+pctChange(WAGE)+"%</b> ↑ · 지수 "+Math.round(WAGE_IDX[19])) +
- kpiCard("var(--apt)","서울 아파트 평균가","12.1억원",
-   '<span class="up">'+pctChange(APT)+"%</span> · 지수 "+Math.round(APT_IDX[19])+" (임금 앞질러 상승)") +
- kpiCard("var(--rate)","정책금리(기준금리)","3.00%",
-   "20년 저점 0.50%(2020) ~ 고점 5.00%(2007)");
+ kpiCard("var(--wage)","시간당 명목임금 (2025)","25,839원",
+   "2005년 대비 <b>"+pctChange(WAGE)+"%</b> ↑ · 지수 "+Math.round(WAGE_IDX[LAST])) +
+ kpiCard("var(--apt)","서울 아파트 평균가 (2025)","15.1억원",
+   '<span class="up">'+pctChange(APT)+"%</span> · 지수 "+Math.round(APT_IDX[LAST])+" (임금 크게 앞섬)") +
+ kpiCard("var(--rate)","정책금리 (기준금리)","2.50%",
+   "2025년말 · <b>2026.07 2.75%로 인상</b> · 20년 저점 0.50%(2020)");
 function kpiCard(color,lab,val,sub){
   return '<div class="kpi"><p class="lab"><span class="dot" style="background:'+color+'"></span>'+lab+
     '</p><div class="val">'+val+'</div><p class="sub">'+sub+'</p></div>';
