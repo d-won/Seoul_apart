@@ -12,10 +12,12 @@
   ecos.bok.or.kr, kosis.kr
 
 ── 키/URL (환경변수) ───────────────────────────────────────────────
-필수
+선택
   ECOS_API_KEY        한국은행 ECOS 인증키   https://ecos.bok.or.kr/api  (무료)
+                      ※ 없어도 됨 — 정책금리 월별은 레포의 변경이력 기반 CSV로 이미 완성.
+                        이 키를 주면 ECOS 공식값으로 덮어쓸 뿐이다.
 
-KOSIS는 표마다 분류코드가 달라, 포털이 만들어 주는 'OpenAPI URL'을 그대로 쓰는 게 가장 확실하다.
+집값·임금(월별)에 필요 — KOSIS는 표마다 분류코드가 달라, 포털이 만들어 주는 'OpenAPI URL'을 그대로 쓰는 게 가장 확실하다.
   KOSIS 통계표 → 우측 상단 [OpenAPI] → '조회 URL' 생성(주기=월, 기간 지정) → 그 URL을 아래에 넣는다.
 
   KOSIS_APT_URL       서울 아파트 실거래가격지수(월) getList URL

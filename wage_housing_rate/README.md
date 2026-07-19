@@ -59,10 +59,10 @@ python build_charts.py        # outputs/ 에 PNG 2종 생성
 > **외부망이 열린 환경(본인 PC 또는 해당 도메인을 허용한 환경)에서** 실행해야 합니다.
 
 ```bash
-# 필수: 한국은행 ECOS 키(무료)
-export ECOS_API_KEY=...
+# (선택) ECOS 키 — 없어도 됨. 정책금리 월별은 변경이력 기반 CSV로 이미 완성.
+# export ECOS_API_KEY=...
 
-# KOSIS는 표마다 코드가 달라, 포털이 만들어 주는 OpenAPI URL을 그대로 사용:
+# 집값·임금(월별)에 필요 — KOSIS는 표마다 코드가 달라, 포털이 만들어 주는 OpenAPI URL을 그대로 사용:
 #   KOSIS 통계표 → [OpenAPI] → 조회 URL 생성(주기=월) → 아래에 붙여넣기
 export KOSIS_APT_URL='https://kosis.kr/openapi/statisticsData.do?method=getList&apiKey=...&orgId=408&tblId=DT_KAB_11672_S1&prdSe=M&...'
 export KOSIS_WAGE_URL='https://kosis.kr/openapi/statisticsData.do?method=getList&apiKey=...&tblId=DT_118N_MON051&prdSe=M&...'
